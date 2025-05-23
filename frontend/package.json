@@ -2,7 +2,6 @@
   "name": "LePain-dashboard",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8000",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.50.4",
     "@heroicons/react": "^2.0.18",

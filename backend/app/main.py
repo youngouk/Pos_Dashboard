@@ -120,3 +120,11 @@ def get_app_info():
         "api_prefix": settings.API_PREFIX,
         "database_url": "***REDACTED***",  # 보안상 실제 URL은 노출하지 않음
     }
+
+# Railway 헬스체크 엔드포인트
+@app.get("/health")
+def railway_health_check():
+    """
+    Railway 헬스체크를 위한 간단한 엔드포인트
+    """
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
