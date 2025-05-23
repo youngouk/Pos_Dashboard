@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: linear-gradient(135deg, theme('colors.gradient-start'), theme('colors.gradient-end'));
+  margin: 0;
+  font-family: theme('fontFamily.sans');
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
+}
+
+.brand-primary {
+  color: theme('colors.brand-primary');
+}
+
+.bg-brand-primary {
+  background-color: theme('colors.brand-primary');
+}
+
+.brand-secondary {
+  color: theme('colors.brand-secondary');
+}
+
+.bg-brand-secondary {
+  background-color: theme('colors.brand-secondary');
+}
+
+.brand-accent {
+  color: theme('colors.brand-success');
+}
+
+.bg-brand-accent {
+  background-color: theme('colors.brand-success');
+}
+
+.hover\:bg-brand-primary-dark:hover {
+  background-color: #14285F;
+}
+
+.focus\:ring-brand-primary:focus {
+  --tw-ring-color: theme('colors.brand-primary');
+}
+
+.focus\:border-brand-primary:focus {
+  border-color: theme('colors.brand-primary');
+}
+
+.border-brand-primary {
+  border-color: theme('colors.brand-primary');
+}
+
+/* Add additional custom styles below */

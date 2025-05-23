@@ -1,0 +1,51 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1. Core Features and Scope (MVP)
+
+Mandatory Features:
+Data Analysis: Calculation and visualization of basic KPI metrics (Total Sales, Visitors, Avg Spend), daily/weekly/monthly trends, and store-specific performance.
+Detailed Sales Analysis: Analysis of sales by time of day/product, payment type, and the impact of discounts.
+Advanced Data Analysis: Anomaly detection, sales-discount correlation analysis, time-of-day-product correlation, store performance factor analysis, trend forecasting, and time series analysis. (Included in MVP despite initial plan)
+Store Comparison: Comparison of selected stores vs. overall average, top/bottom 25% stores, and similar stores by commercial area.
+User Interface:
+Filtering: Date range, store selection (single/multiple), product category filter.
+User-Customized Interfaces: Implement Headquarters view and Supervisor view (excluding store owner view). No authentication or authorization functionality; simply display different UI/UX configurations based on the selected view/tab.
+Basic Dashboard Screen: KPI cards, key charts, data filter controls.
+Basic Announcements (simple text list).
+Features Explicitly Excluded from MVP (for future implementation): Review analysis, Naver Place impact analysis, report generation/export, customer flow/churn analysis, Q&A/complaint board, responsive mobile UI, all user authentication and authorization features.
+2. Technical Stack and Library Choices (Specific to Project)
+
+Backend: Python FastAPI (Global Rule)
+Data Access: Supabase Client (Global Rule)
+Data Processing: Pandas, NumPy, Scikit-learn (for advanced analytics), statsmodels, prophet (for time series analysis).
+Frontend: React.js (Global Rule)
+State Management: Use React Context API.
+UI Library: Use Tailwind CSS.
+Chart Libraries: Use Recharts and D3.js (for advanced visualizations).
+Routing: Use React Router.
+API Communication: Use Axios.
+User View Switching: Implement via a tab interface.
+Deployment: EC2 Docker Single Instance (Docker Compose, Nginx)
+3. Architecture and Structure (Project Specific)
+
+Backend Structure: Follow the provided backend project structure (backend/app/...) and functional module organization (api/endpoints/, services/, models/).
+Frontend Structure: Follow the provided frontend project structure (frontend/src/...) and component/page/service/context organization.
+Key API Endpoints: Strictly adhere to the API endpoints defined in the plan: /api/sales, /api/kpi, /api/analytics, /api/compare, /api/trends, /api/notice, including their sub-paths and parameter definitions.
+Data Flow: Follow the basic data processing flow and the detailed data processing/analytics pipeline steps outlined in the plan.
+Data Caching Strategy: Use backend memory caching and frontend local state storage as the primary caching strategies. Cache results of computation-heavy advanced analysis in backend memory. Exclude external caching solutions like Redis for the MVP.
+4. Implementation Details
+
+Supabase Data Access: Use the supabase-py library, query only necessary data, and handle aggregations at the database level where possible.
+Data Processing: Perform all complex calculations and aggregations on the backend, providing both calculated results and raw data for visualization.
+Advanced Analytics Implementation: Implement the anomaly detection (Z-score, IQR, STL), correlation analysis (Pearson/Spearman, Heatmap), sales pattern/trend analysis (Moving Average, Seasonality, ARIMA forecasting), and store performance factor analysis (Clustering, Discriminant Analysis) techniques specified in section 5 of the plan, applying them to the relevant data points.
+Frontend Performance: Load only necessary data, apply memoization (React.memo, useMemo, useCallback), and optimize chart rendering (limit data points).
+Screen Design: Follow the common layout and the composition of Headquarters/Supervisor dashboard screens, detailed analytics screen, and notice screen as described in section 8 of the plan. Implement user view switching using a tab UI.
+5. Technical Debt and Compromises (MVP Specific)
+
+Do not implement user authentication or authorization functionality. (This aligns with the MVP exclusion list, and may interact with the global rule on simplified error handling/logging, but the core logic is omitted).
+Use only simplified caching strategies like memory caching.
+Be aware of the scalability limitation due to single-server deployment.
+Consider data refreshing to be manual only.

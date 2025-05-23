@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import './styles/chartAnalysis.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #FFA07A 0%, #87CEEB 100%);
+  background-attachment: fixed;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Panze UI 스타일 컴포넌트 */
+@layer components {
+  .panze-card {
+    @apply bg-white rounded-panze shadow-panze p-5 transition-all duration-200 hover:shadow-lg;
+  }
+
+  .panze-button {
+    @apply px-4 py-2 rounded-full text-sm transition-colors;
+  }
+
+  .panze-button-primary {
+    @apply panze-button bg-panze-dark text-white hover:bg-gray-800;
+  }
+
+  .panze-button-secondary {
+    @apply panze-button bg-gray-100 text-gray-700 hover:bg-gray-200;
+  }
+
+  .panze-icon-button {
+    @apply p-2 rounded-full transition-colors;
+  }
+
+  .panze-tab {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-colors;
+  }
+
+  .panze-tab-active {
+    @apply bg-panze-dark text-white;
+  }
+
+  .panze-tab-inactive {
+    @apply bg-white text-gray-700 border border-gray-200 hover:bg-gray-100;
+  }
+
+  .panze-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
