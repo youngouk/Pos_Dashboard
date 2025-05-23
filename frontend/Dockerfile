@@ -1,26 +1,26 @@
-# Node base image
+# Node.js 18 베이스 이미지 사용
 FROM node:18-alpine
 
-# Set working directory
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# package.json과 package-lock.json 복사
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# 의존성 설치
+RUN npm ci --only=production
 
-# Copy all files
+# 애플리케이션 코드 복사
 COPY . .
 
-# Build the app
+# 프로덕션 빌드
 RUN npm run build
 
-# Install serve to run the application
+# serve 전역 설치
 RUN npm install -g serve
 
-# Expose port
-EXPOSE 3000
+# 포트 노출
+EXPOSE $PORT
 
-# Command to run the app
-CMD ["npm", "start"]
+# 애플리케이션 실행
+CMD ["sh", "-c", "serve -s build -l $PORT"]
