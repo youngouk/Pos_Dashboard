@@ -16,3 +16,4 @@ python-multipart>=0.0.6
 pydantic-settings
 sqlalchemy>=2.0.0
 aiosqlite>=0.19.0  # SQLite async 지원
+anthropic>=0.50.0  # AI 분석용
