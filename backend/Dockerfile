@@ -13,8 +13,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY . .
+
+# Ensure database file has correct permissions
+RUN chmod 644 lepain_local.db
+
+RUN chmod +x start.sh
 
 EXPOSE $PORT
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["./start.sh"]

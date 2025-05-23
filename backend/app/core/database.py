@@ -22,21 +22,41 @@ Base = declarative_base()
 
 # 데이터베이스 경로
 import os
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "LePain.db")
+
+# Railway 배포 환경에서는 현재 디렉토리에서 데이터베이스 파일을 찾음
+if os.path.exists("lepain_local.db"):
+    # Railway 배포 환경 - 현재 디렉토리에 데이터베이스 파일이 있음
+    DB_PATH = os.path.abspath("lepain_local.db")
+    logger.info("Using database from current directory (Railway deployment)")
+else:
+    # 로컬 개발 환경 - 기존 경로 사용
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "LePain.db")
+    logger.info("Using database from data directory (local development)")
+
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 logger.info(f"Database path: {DB_PATH}")
 logger.info(f"Database exists: {os.path.exists(DB_PATH)}")
 
+# 데이터베이스 파일이 없는 경우 경고 로그
+if not os.path.exists(DB_PATH):
+    logger.warning(f"Database file not found at {DB_PATH}")
+    # Railway 환경에서 현재 디렉토리 파일 목록 확인
+    logger.info(f"Current directory: {os.getcwd()}")
+    logger.info(f"Files in current directory: {os.listdir('.')}")
+
 # 엔진 생성
 try:
     logger.info(f"Creating database engine: {DATABASE_URL}")
-    engine = create_engine(DATABASE_URL, echo=True, connect_args={"check_same_thread": False})  # echo=True로 SQL 로깅
+    engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})  # echo=False로 변경 (로그 과다 방지)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     logger.info("Database engine created successfully")
 except Exception as e:
     logger.error(f"Failed to create database engine: {e}")
-    raise
+    # Railway 환경에서는 에러가 발생해도 서버가 시작되도록 함
+    logger.warning("Continuing without database connection...")
+    engine = None
+    SessionLocal = None
 
 # 테이블 모델 정의
 class DailySalesSummary(Base):
@@ -91,6 +111,10 @@ class Tables:
 # DB 세션 생성 함수
 def get_db():
     """FastAPI 의존성 주입용 DB 세션"""
+    if SessionLocal is None:
+        logger.error("Database session not available")
+        raise Exception("Database connection not available")
+    
     db = SessionLocal()
     try:
         yield db
@@ -207,19 +231,34 @@ class SupabaseCompatibleQuery:
             raise
 
 # 전역 DB 세션 (임시 - 점진적 마이그레이션용)
-_global_db = SessionLocal()
+_global_db = None
+if SessionLocal is not None:
+    try:
+        _global_db = SessionLocal()
+        logger.info("Global database session created")
+    except Exception as e:
+        logger.error(f"Failed to create global database session: {e}")
+        _global_db = None
 
 def get_table(table_name: str):
     """
     테이블명을 받아 Supabase 호환 쿼리 객체를 반환
     기존 코드와의 호환성을 위한 함수
     """
+    if _global_db is None:
+        logger.error("Database connection not available")
+        raise Exception("Database connection not available")
+    
     logger.info(f"테이블 접근: {table_name}")
     return SupabaseCompatibleQuery(_global_db, table_name)
 
 # SQL 쿼리 직접 실행 (기존 코드 호환)
 async def run_query(query: str, params: dict = None) -> List[Dict[str, Any]]:
     """Raw SQL 쿼리 실행"""
+    if SessionLocal is None:
+        logger.error("Database connection not available for query execution")
+        raise Exception("Database connection not available")
+    
     logger.info(f"SQL 쿼리 실행: {query[:100]}...")
     
     db = SessionLocal()

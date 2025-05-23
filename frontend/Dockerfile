@@ -7,8 +7,8 @@ WORKDIR /app
 # package.json과 package-lock.json 복사
 COPY package*.json ./
 
-# 의존성 설치
-RUN npm install --production
+# 의존성 설치 (production 플래그 제거 - 빌드에 필요한 devDependencies 포함)
+RUN npm install
 
 # 애플리케이션 코드 복사
 COPY . .
@@ -16,11 +16,17 @@ COPY . .
 # 프로덕션 빌드
 RUN npm run build
 
+# 빌드 결과 확인
+RUN ls -la build/
+
 # serve 전역 설치
 RUN npm install -g serve
 
-# 포트 노출
+# 시작 스크립트 실행 권한 부여
+RUN chmod +x start.sh
+
+# Railway에서 동적으로 할당하는 포트 사용
 EXPOSE $PORT
 
-# 애플리케이션 실행
-CMD ["sh", "-c", "serve -s build -l $PORT"]
+# 시작 스크립트 실행
+CMD ["./start.sh"]

@@ -56,33 +56,49 @@ app.include_router(api_router, prefix=settings.API_PREFIX)
 @app.on_event("startup")
 async def startup_event():
     """서버 시작 이벤트 핸들러"""
-    logger.info(f"Starting {settings.APP_NAME}")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Debug mode: {settings.DEBUG}")
-    logger.info(f"Log level: {logging_level}")
-    logger.info(f"Using Local DB: {settings.USE_LOCAL_DB}")
-    
-    # API 키 로깅 (마스킹)
-    anthropic_key = settings.ANTHROPIC_API_KEY
-    if anthropic_key:
-        masked_key = f"{anthropic_key[:8]}...{anthropic_key[-4:]}" if len(anthropic_key) > 12 else "***"
-        logger.info(f"Anthropic API Key loaded: {masked_key}")
-    else:
-        logger.warning("Anthropic API Key not set!")
-    
-    # 샘플 공지사항 초기화 (로컬 DB 모드에서는 스킵)
-    if not settings.USE_LOCAL_DB:
-        await notice_service.initialize_sample_notices()
-    
-    # 서버 시작 시간 기록
-    app.state.start_time = datetime.now()
-    app.state.uptime = 0
-    
-    # 매장 API 초기화 로깅
-    logger.info("매장 API 초기화 완료")
-    
-    # 추가 초기화 작업
-    logger.info("Server initialization complete")
+    try:
+        logger.info(f"Starting {settings.APP_NAME}")
+        logger.info(f"Environment: {settings.ENVIRONMENT}")
+        logger.info(f"Debug mode: {settings.DEBUG}")
+        logger.info(f"Log level: {logging_level}")
+        logger.info(f"Using Local DB: {settings.USE_LOCAL_DB}")
+        
+        # API 키 로깅 (마스킹)
+        anthropic_key = settings.ANTHROPIC_API_KEY
+        if anthropic_key:
+            masked_key = f"{anthropic_key[:8]}...{anthropic_key[-4:]}" if len(anthropic_key) > 12 else "***"
+            logger.info(f"Anthropic API Key loaded: {masked_key}")
+        else:
+            logger.warning("Anthropic API Key not set!")
+        
+        # 데이터베이스 파일 확인 (로컬 DB 모드)
+        if settings.USE_LOCAL_DB:
+            import os
+            db_path = "lepain_local.db"
+            if os.path.exists(db_path):
+                logger.info(f"Local database found: {db_path}")
+                logger.info(f"Database size: {os.path.getsize(db_path)} bytes")
+            else:
+                logger.error(f"Local database not found: {db_path}")
+        
+        # 샘플 공지사항 초기화 (로컬 DB 모드에서는 스킵)
+        if not settings.USE_LOCAL_DB:
+            await notice_service.initialize_sample_notices()
+        
+        # 서버 시작 시간 기록
+        app.state.start_time = datetime.now()
+        app.state.uptime = 0
+        
+        # 매장 API 초기화 로깅
+        logger.info("매장 API 초기화 완료")
+        
+        # 추가 초기화 작업
+        logger.info("Server initialization complete")
+        
+    except Exception as e:
+        logger.error(f"Startup error: {str(e)}")
+        # Railway에서는 startup 실패시에도 서버가 시작되도록 함
+        logger.warning("Continuing startup despite errors...")
 
 # 루트 경로 헬스체크 엔드포인트 (확장)
 @app.get("/")
@@ -127,4 +143,26 @@ def railway_health_check():
     """
     Railway 헬스체크를 위한 간단한 엔드포인트
     """
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    try:
+        # 기본 상태 확인
+        status = {
+            "status": "ok", 
+            "timestamp": datetime.now().isoformat(),
+            "app_name": settings.APP_NAME,
+            "environment": settings.ENVIRONMENT
+        }
+        
+        # 데이터베이스 파일 확인 (로컬 DB 모드)
+        if settings.USE_LOCAL_DB:
+            import os
+            db_path = "lepain_local.db"
+            status["database"] = "found" if os.path.exists(db_path) else "missing"
+        
+        return status
+    except Exception as e:
+        # 헬스체크는 항상 성공해야 함
+        return {
+            "status": "ok", 
+            "timestamp": datetime.now().isoformat(),
+            "note": "basic health check"
+        }

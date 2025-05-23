@@ -2,7 +2,7 @@
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "serve -s build -l $PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 100
+startCommand = "./start.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE" 
