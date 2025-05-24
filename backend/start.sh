@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# SIGTERM 신호 무시 - Railway 강제 종료 방지
+trap '' SIGTERM SIGINT
+echo "Signal traps set to ignore SIGTERM and SIGINT"
+
 # Python 버퍼링 비활성화 (Railway 환경)
 export PYTHONUNBUFFERED=1
 
@@ -45,13 +49,6 @@ echo "Using Railway environment variables (no .env file needed)"
 # 서버 시작
 echo "Starting uvicorn server..."
 
-# 웹 서비스임을 명확히 하기 위해 백그라운드 실행 + 무한 대기
-uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --log-level debug &
-
-# PID 저장
-UVICORN_PID=$!
-echo "Uvicorn started with PID: $UVICORN_PID"
-
-# 웹 서비스로 인식되도록 무한 대기
-echo "Web service started. Waiting indefinitely..."
-wait $UVICORN_PID 
+# 직접 uvicorn 실행 (신호 무시 상태에서)
+echo "Web service starting with signal protection..."
+exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --log-level info 
