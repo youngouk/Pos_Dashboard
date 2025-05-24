@@ -43,10 +43,21 @@ logging.getLogger("h2.connection").setLevel(logging.WARNING)
 
 # Railway 환경에서 로그 레벨 강제 설정
 import os
+import signal
+import sys
+
 if os.getenv("RAILWAY_ENVIRONMENT"):
     # Railway에서는 INFO 레벨로 제한하여 로그 오분류 방지
     logging.getLogger().setLevel(logging.INFO)
     logger.setLevel(logging.INFO)
+
+# 종료 시그널 핸들러
+def signal_handler(sig, frame):
+    logger.info(f"Received signal {sig}. Shutting down gracefully...")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 # FastAPI 앱 인스턴스 생성
 app = FastAPI(
