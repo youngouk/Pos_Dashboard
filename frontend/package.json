@@ -21,10 +21,11 @@
     "react-scripts": "5.0.1",
     "recharts": "^2.12.3",
     "remark-breaks": "^4.0.0",
+    "serve": "^14.2.4",
     "web-vitals": "^3.5.2"
   },
   "scripts": {
-    "start": "node ./node_modules/react-scripts/bin/react-scripts.js start",
+    "start": "serve -s build -l ${PORT:-3000}",
     "dev": "node ./node_modules/react-scripts/bin/react-scripts.js start",
     "build": "CI=false node ./node_modules/react-scripts/bin/react-scripts.js build",
     "serve": "serve -s build -l $PORT",
