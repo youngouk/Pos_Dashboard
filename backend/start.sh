@@ -51,4 +51,5 @@ exec uvicorn app.main:app \
     --log-level info \
     --access-log \
     --no-use-colors \
-    --loop asyncio 
+    --loop asyncio \
+    --lifespan on 
