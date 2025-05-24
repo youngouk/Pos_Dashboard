@@ -10,9 +10,6 @@ COPY package*.json ./
 # 의존성 설치 (production 플래그 제거 - 빌드에 필요한 devDependencies 포함)
 RUN npm install
 
-# serve 전역 설치
-RUN npm install -g serve
-
 # 애플리케이션 코드 복사
 COPY . .
 
@@ -32,5 +29,5 @@ RUN ls -la build/
 # Railway 웹 서비스 인식을 위한 포트 EXPOSE
 EXPOSE 8080
 
-# serve로 정적 파일 서빙 (SPA 지원)
-CMD ["serve", "-s", "build", "-p", "8080", "--no-clipboard", "--single"]
+# Express 서버로 정적 파일 서빙
+CMD ["node", "server.js"]
