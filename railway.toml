@@ -3,11 +3,7 @@ builder = "DOCKERFILE"
 
 [deploy]
 startCommand = "./start.sh"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
-healthcheckInterval = 30
-maxRetries = 10
 processType = "web"
 numReplicas = 1
 region = "us-west1" 

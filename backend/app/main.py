@@ -167,32 +167,32 @@ def get_app_info():
         "database_url": "***REDACTED***",  # 보안상 실제 URL은 노출하지 않음
     }
 
-# Railway 헬스체크 엔드포인트
-@app.get("/health")
-def railway_health_check():
-    """
-    Railway 헬스체크를 위한 간단한 엔드포인트
-    """
-    try:
-        # 기본 상태 확인
-        status = {
-            "status": "ok", 
-            "timestamp": datetime.now().isoformat(),
-            "app_name": settings.APP_NAME,
-            "environment": settings.ENVIRONMENT
-        }
-        
-        # 데이터베이스 파일 확인 (로컬 DB 모드)
-        if settings.USE_LOCAL_DB:
-            import os
-            db_path = "lepain_local.db"
-            status["database"] = "found" if os.path.exists(db_path) else "missing"
-        
-        return status
-    except Exception as e:
-        # 헬스체크는 항상 성공해야 함
-        return {
-            "status": "ok", 
-            "timestamp": datetime.now().isoformat(),
-            "note": "basic health check"
-        }
+# Railway 헬스체크 엔드포인트 - 비활성화
+# @app.get("/health")
+# def railway_health_check():
+#     """
+#     Railway 헬스체크를 위한 간단한 엔드포인트
+#     """
+#     try:
+#         # 기본 상태 확인
+#         status = {
+#             "status": "ok", 
+#             "timestamp": datetime.now().isoformat(),
+#             "app_name": settings.APP_NAME,
+#             "environment": settings.ENVIRONMENT
+#         }
+#         
+#         # 데이터베이스 파일 확인 (로컬 DB 모드)
+#         if settings.USE_LOCAL_DB:
+#             import os
+#             db_path = "lepain_local.db"
+#             status["database"] = "found" if os.path.exists(db_path) else "missing"
+#         
+#         return status
+#     except Exception as e:
+#         # 헬스체크는 항상 성공해야 함
+#         return {
+#             "status": "ok", 
+#             "timestamp": datetime.now().isoformat(),
+#             "note": "basic health check"
+#         }
