@@ -1,5 +1,5 @@
 # Node.js 20 베이스 이미지 사용 (Anthropic SDK 요구사항)
-FROM node:20-alpine
+FROM node:20-alpine as builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -26,14 +26,31 @@ RUN npm run build
 # 빌드 결과 확인
 RUN ls -la build/
 
-# serve 전역 설치
-RUN npm install -g serve
+# 프로덕션 스테이지: nginx 사용
+FROM nginx:alpine
 
-# 시작 스크립트 실행 권한 부여
-RUN chmod +x start.sh
+# 빌드된 앱을 nginx html 디렉토리로 복사
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Railway 웹 서비스 인식을 위한 포트 EXPOSE (고정)
+# nginx 설정 파일 생성 (SPA 지원)
+RUN echo 'server { \
+    listen 8080; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # 정적 파일 캐싱 \
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+# Railway 웹 서비스 인식을 위한 포트 EXPOSE
 EXPOSE 8080
 
-# 시작 스크립트 실행
-CMD ["./start.sh"]
+# nginx 시작
+CMD ["nginx", "-g", "daemon off;"]

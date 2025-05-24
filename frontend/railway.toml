@@ -3,7 +3,6 @@ builder = "DOCKERFILE"
 buildArgs = ["REACT_APP_API_URL=https://posdashboard-production.up.railway.app"]
 
 [deploy]
-startCommand = "./start.sh"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
