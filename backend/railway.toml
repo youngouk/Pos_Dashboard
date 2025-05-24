@@ -9,4 +9,5 @@ restartPolicyType = "ON_FAILURE"
 healthcheckInterval = 30
 maxRetries = 10
 processType = "web"
-numReplicas = 1 
+numReplicas = 1
+region = "us-west1" 

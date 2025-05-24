@@ -51,10 +51,14 @@ if os.getenv("RAILWAY_ENVIRONMENT"):
     logging.getLogger().setLevel(logging.INFO)
     logger.setLevel(logging.INFO)
 
-# 종료 시그널 핸들러
+# 종료 시그널 핸들러 - Railway 호환성 개선
+shutdown_event = False
+
 def signal_handler(sig, frame):
-    logger.info(f"Received signal {sig}. Shutting down gracefully...")
-    sys.exit(0)
+    global shutdown_event
+    logger.info(f"Received signal {sig}. Preparing for shutdown...")
+    shutdown_event = True
+    # sys.exit()를 호출하지 않고 uvicorn이 자연스럽게 종료하도록 함
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
