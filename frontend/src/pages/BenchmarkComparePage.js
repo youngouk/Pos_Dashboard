@@ -88,41 +88,90 @@ const BenchmarkComparePage = () => {
   /* ---------------------------- 데이터 패칭 로직 --------------------------- */
   useEffect(() => {
     const fetchBothStores = async () => {
+      console.log('🚀 BenchmarkComparePage 데이터 패칭 시작 (캐시 비활성화)', { targetStore, fetchBenchmarkName });
+      
       try {
-        // 선택 매장
+        // 선택 매장 데이터
         const storeParams = buildParams(targetStore);
-        const dailyKeyStore = `bench_daily_${targetStore}_${filters.dateRange.startDate}_${filters.dateRange.endDate}`;
-        const prodKeyStore = `bench_prod_${targetStore}_${filters.dateRange.startDate}_${filters.dateRange.endDate}`;
-        const storeDaily = await fetchApiData(salesService, 'getDailySales', storeParams, dailyKeyStore);
-        const storeProd = await fetchApiData(salesService, 'getProductSales', { ...storeParams, limit: 50 }, prodKeyStore);
-        setDailyDataStore(storeDaily);
-        setProductDataStore(storeProd);
+        
+        // 선택 매장 일별 데이터 (캐시 없이 직접 호출)
+        try {
+          console.log('📊 선택 매장 일별 데이터 요청 시작:', storeParams);
+          const response = await salesService.getDailySales(storeParams);
+          const storeDaily = response.data;
+          console.log('✅ 선택 매장 일별 데이터 응답:', storeDaily);
+          setDailyDataStore(storeDaily || []);
+        } catch (error) {
+          console.error('❌ 선택 매장 일별 데이터 실패:', error);
+          setDailyDataStore([]);
+        }
+        
+        // 선택 매장 상품별 데이터 (캐시 없이 직접 호출)
+        try {
+          console.log('🛍️ 선택 매장 상품별 데이터 요청 시작:', { ...storeParams, limit: 50 });
+          const response = await salesService.getProductSales({ ...storeParams, limit: 50 });
+          const storeProd = response.data;
+          console.log('✅ 선택 매장 상품별 데이터 응답:', storeProd);
+          setProductDataStore(storeProd || []);
+        } catch (error) {
+          console.error('❌ 선택 매장 상품별 데이터 실패:', error);
+          setProductDataStore([]);
+        }
 
         // 상위25% 및 하위25% 벤치마크 매장 데이터
         const topName = '명동점';
         const bottomName = '몽핀점';
         const topParams = buildParams(topName);
         const bottomParams = buildParams(bottomName);
-        const dailyKeyTop = `bench_daily_${topName}_${filters.dateRange.startDate}_${filters.dateRange.endDate}`;
-        const dailyKeyBottom = `bench_daily_${bottomName}_${filters.dateRange.startDate}_${filters.dateRange.endDate}`;
-        const topDaily = await fetchApiData(salesService, 'getDailySales', topParams, dailyKeyTop);
-        const bottomDaily = await fetchApiData(salesService, 'getDailySales', bottomParams, dailyKeyBottom);
-        setDailyDataTop(topDaily);
-        setDailyDataBottom(bottomDaily);
+        
+        // 상위25% 매장 일별 데이터 (캐시 없이 직접 호출)
+        try {
+          console.log('📊 상위25% 매장 일별 데이터 요청 시작:', topParams);
+          const response = await salesService.getDailySales(topParams);
+          const topDaily = response.data;
+          console.log('✅ 상위25% 매장 일별 데이터 응답:', topDaily);
+          setDailyDataTop(topDaily || []);
+        } catch (error) {
+          console.error('❌ 상위25% 매장 일별 데이터 실패:', error);
+          setDailyDataTop([]);
+        }
+        
+        // 하위25% 매장 일별 데이터 (캐시 없이 직접 호출)
+        try {
+          console.log('📊 하위25% 매장 일별 데이터 요청 시작:', bottomParams);
+          const response = await salesService.getDailySales(bottomParams);
+          const bottomDaily = response.data;
+          console.log('✅ 하위25% 매장 일별 데이터 응답:', bottomDaily);
+          setDailyDataBottom(bottomDaily || []);
+        } catch (error) {
+          console.error('❌ 하위25% 매장 일별 데이터 실패:', error);
+          setDailyDataBottom([]);
+        }
 
-        // 벤치마크 매장 상품별 데이터 (현재 탭)
+        // 벤치마크 매장 상품별 데이터 (현재 탭) (캐시 없이 직접 호출)
         const benchParams = buildParams(fetchBenchmarkName);
-        const prodKeyBench = `bench_prod_${fetchBenchmarkName}_${filters.dateRange.startDate}_${filters.dateRange.endDate}`;
-        const benchProd = await fetchApiData(salesService, 'getProductSales', { ...benchParams, limit: 50 }, prodKeyBench);
-        setProductDataBenchmark(benchProd);
+        
+        try {
+          console.log('🛍️ 벤치마크 매장 상품별 데이터 요청 시작:', { ...benchParams, limit: 50 });
+          const response = await salesService.getProductSales({ ...benchParams, limit: 50 });
+          const benchProd = response.data;
+          console.log('✅ 벤치마크 매장 상품별 데이터 응답:', benchProd);
+          setProductDataBenchmark(benchProd || []);
+        } catch (error) {
+          console.error('❌ 벤치마크 매장 상품별 데이터 실패:', error);
+          setProductDataBenchmark([]);
+        }
+
+        console.log('🎉 BenchmarkComparePage 데이터 패칭 완료 (캐시 비활성화)');
 
       } catch (err) {
+        console.error('💥 BenchmarkComparePage 전체 데이터 패칭 실패:', err);
         setError(err.toString());
       }
     };
 
     if (targetStore) fetchBothStores();
-  }, [targetStore, filters.dateRange.startDate, filters.dateRange.endDate, fetchBenchmarkName]);
+  }, [targetStore, filters.dateRange.startDate, filters.dateRange.endDate, fetchBenchmarkName, setError]);
 
   /* ------------------------------ 유틸 함수 ------------------------------ */
   const sumReducer = (arr, key) => arr.reduce((sum, item) => sum + (item[key] || 0), 0);

@@ -1,9 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-
-[deploy]
-startCommand = "./start.sh"
-restartPolicyType = "ON_FAILURE"
-processType = "web"
-numReplicas = 1
-region = "us-west1" 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDashboard } from '../contexts/DashboardContext';
 import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
-import { compareService } from '../services/api';
+import { compareService, salesService } from '../services/api';
 
 const ComparePage = () => {
   const { filters, setLoading, setError } = useDashboard();
@@ -12,6 +12,10 @@ const ComparePage = () => {
   const [benchmarkData, setBenchmarkData] = useState(null);
   const [factorsData, setFactorsData] = useState([]);
   const [comparisonType, setComparisonType] = useState('average'); // 'average', 'top25', 'bottom25', 'similar'
+  
+  // State for product comparison data
+  const [storeProductData, setStoreProductData] = useState([]);
+  const [benchmarkProductData, setBenchmarkProductData] = useState([]);
   
   // Fetch comparison data
   useEffect(() => {
@@ -84,8 +88,43 @@ const ComparePage = () => {
           });
         }
         setBenchmarkData(derivedBenchmark);
+
+        // 3) 상품별 매출 데이터 가져오기
+        const productParams = {
+          start_date: filters.dateRange.startDate,
+          end_date: filters.dateRange.endDate,
+          store_name: [targetStore],
+          limit: 10
+        };
         
-        // 3) 성과 요인(factors) API가 아직 없을 수 있으므로 실패해도 무시
+        try {
+          // 선택 매장 상품 데이터
+          const storeProductResponse = await salesService.getProductSales(productParams);
+          setStoreProductData(storeProductResponse.data || []);
+          
+          // 벤치마크 매장 상품 데이터
+          let benchmarkStoreName = '명동점'; // 기본 벤치마크 매장
+          if (comparisonType === 'bottom25') {
+            benchmarkStoreName = '몽핀점';
+          } else if (comparisonType === 'similar') {
+            benchmarkStoreName = '석촌점'; // 유사 매장 예시
+          }
+          
+          const benchmarkProductParams = {
+            ...productParams,
+            store_name: [benchmarkStoreName]
+          };
+          
+          const benchmarkProductResponse = await salesService.getProductSales(benchmarkProductParams);
+          setBenchmarkProductData(benchmarkProductResponse.data || []);
+          
+        } catch (productError) {
+          console.warn('상품별 데이터 호출 실패:', productError);
+          setStoreProductData([]);
+          setBenchmarkProductData([]);
+        }
+        
+        // 4) 성과 요인(factors) API가 아직 없을 수 있으므로 실패해도 무시
         try {
           const factorsResp = await compareService.getFactors({
             store_name: targetStore,
@@ -110,7 +149,7 @@ const ComparePage = () => {
     
     // 항상 데이터 호출 (targetStore 내부에서 적절히 fallback)
     fetchComparisonData();
-  }, [filters.selectedStore, filters.stores, comparisonType, setLoading, setError]);
+  }, [filters.selectedStore, filters.stores, comparisonType, filters.dateRange.startDate, filters.dateRange.endDate, setLoading, setError]);
   
   // Format performance metrics for radar chart
   const formatMetricData = () => {
