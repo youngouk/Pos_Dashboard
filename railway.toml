@@ -10,8 +10,4 @@ healthcheckInterval = 30
 maxRetries = 10
 processType = "web"
 numReplicas = 1
-region = "us-west1"
-
-# 웹 서비스임을 명확히 하는 추가 설정
-[service]
-type = "web" 
+region = "us-west1" 

@@ -1,27 +1,27 @@
 #!/bin/bash
+set -e
 
 # Python 버퍼링 비활성화 (Railway 환경)
 export PYTHONUNBUFFERED=1
 
-# Railway 환경변수 확인
 echo "=== Railway Environment Check ==="
-echo "PORT: ${PORT:-'Not set'}"
+echo "PORT: ${PORT:-8080}"
 echo "ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:+Set}"
-echo "DATABASE_URL: ${DATABASE_URL:-'Not set'}"
-echo "ENVIRONMENT: ${ENVIRONMENT:-'production'}"
-echo "APP_NAME: ${APP_NAME:-'LePain Dashboard'}"
-echo "DEBUG: ${DEBUG:-'false'}"
-echo "USE_LOCAL_DB: ${USE_LOCAL_DB:-'true'}"
+echo "DATABASE_URL: '${DATABASE_URL:-Not set}'"
+echo "ENVIRONMENT: ${ENVIRONMENT:-development}"
+echo "APP_NAME: ${APP_NAME:-LePain Dashboard}"
+echo "DEBUG: ${DEBUG:-true}"
+echo "USE_LOCAL_DB: ${USE_LOCAL_DB:-true}"
 echo "================================="
 
 # 포트 설정 (Railway에서 동적 할당)
-export PORT=${PORT:-8000}
+export PORT=${PORT:-8080}
 echo "Starting server on port: $PORT"
 
 # Railway 환경변수 기본값 설정
-export ENVIRONMENT=${ENVIRONMENT:-production}
+export ENVIRONMENT=${ENVIRONMENT:-development}
 export APP_NAME="${APP_NAME:-LePain Dashboard}"
-export DEBUG=${DEBUG:-false}
+export DEBUG=${DEBUG:-true}
 export USE_LOCAL_DB=${USE_LOCAL_DB:-true}
 export API_PREFIX=${API_PREFIX:-/api}
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -36,7 +36,7 @@ if [ -f "lepain_local.db" ]; then
     echo "Database file found: lepain_local.db"
     ls -la lepain_local.db
 else
-    echo "Warning: Database file not found"
+    echo "Warning: lepain_local.db not found"
 fi
 
 # Railway 환경변수 정보 출력
@@ -44,12 +44,14 @@ echo "Using Railway environment variables (no .env file needed)"
 
 # 서버 시작
 echo "Starting uvicorn server..."
-# Railway 환경에서 안정적인 실행을 위한 옵션 추가
-exec uvicorn app.main:app \
-    --host 0.0.0.0 \
-    --port $PORT \
-    --log-level info \
-    --access-log \
-    --no-use-colors \
-    --loop asyncio \
-    --lifespan on 
+
+# 웹 서비스임을 명확히 하기 위해 백그라운드 실행 + 무한 대기
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --log-level debug &
+
+# PID 저장
+UVICORN_PID=$!
+echo "Uvicorn started with PID: $UVICORN_PID"
+
+# 웹 서비스로 인식되도록 무한 대기
+echo "Web service started. Waiting indefinitely..."
+wait $UVICORN_PID 
