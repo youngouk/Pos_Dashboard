@@ -31,7 +31,6 @@ fi
 echo "Serve version:"
 serve --version
 
-# 서버 시작 - Railway에서 0.0.0.0으로 바인딩 필요
-echo "Starting serve on http://0.0.0.0:$PORT"
-# Serve static build, listening on all interfaces at the specified port
-exec serve -s build --listen http://0.0.0.0:$PORT 
+# 서버 시작 - serve는 기본적으로 0.0.0.0에 바인딩됩니다
+echo "Starting serve on port $PORT (binding to 0.0.0.0 by default)"
+exec serve -s build -p $PORT 
