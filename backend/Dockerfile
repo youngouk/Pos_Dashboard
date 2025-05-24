@@ -18,12 +18,14 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
-# Set permissions
-RUN chmod 644 lepain_local.db && \
-    chmod +x start.sh
+# 데이터베이스 파일을 현재 디렉토리로 복사 (Railway 환경 호환)
+COPY data/lepain.db ./lepain_local.db
 
-# Expose port for Railway web service detection
+# Set file permissions
+RUN chmod 644 lepain_local.db
+
+# Railway에서 동적으로 할당하는 포트 노출
 EXPOSE 8080
 
-# Run uvicorn directly (Railway web service)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "info"]
+# 서버 시작
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
