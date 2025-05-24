@@ -21,8 +21,8 @@ RUN chmod 644 lepain_local.db
 
 RUN chmod +x start.sh
 
-# Railway는 동적 포트를 사용하므로 EXPOSE 제거
-# EXPOSE는 문서화 목적이므로 실제 바인딩에는 영향 없음
+# Railway 웹 서비스 인식을 위한 포트 EXPOSE
+EXPOSE 8080
 
 # Shell 형태로 실행하여 환경변수 확장 보장
 CMD ["/bin/bash", "-c", "./start.sh"]
