@@ -6,4 +6,6 @@ buildArgs = ["REACT_APP_API_URL=https://posdashboard-production.up.railway.app"]
 startCommand = "./start.sh"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE" 
+restartPolicyType = "ON_FAILURE"
+processType = "web"
+numReplicas = 1 

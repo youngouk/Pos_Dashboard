@@ -32,8 +32,8 @@ RUN npm install -g serve
 # 시작 스크립트 실행 권한 부여
 RUN chmod +x start.sh
 
-# Railway에서 동적으로 할당하는 포트 사용
-EXPOSE $PORT
+# Railway 웹 서비스 인식을 위한 포트 EXPOSE (고정)
+EXPOSE 8080
 
 # 시작 스크립트 실행
 CMD ["./start.sh"]

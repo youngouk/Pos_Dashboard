@@ -11,6 +11,9 @@ echo "=================================="
 export PORT=${PORT:-3000}
 echo "Starting frontend on port: $PORT"
 
+# Railway Job 인식 방지를 위한 신호 무시 설정
+trap '' TERM INT
+
 # 현재 디렉토리 확인
 echo "Current directory: $(pwd)"
 echo "Directory contents:"
