@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Python 버퍼링 비활성화 (Railway 환경)
+export PYTHONUNBUFFERED=1
+
 # Railway 환경변수 확인
 echo "=== Railway Environment Check ==="
 echo "PORT: ${PORT:-'Not set'}"
@@ -41,4 +44,11 @@ echo "Using Railway environment variables (no .env file needed)"
 
 # 서버 시작
 echo "Starting uvicorn server..."
-exec uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level info 
+# Railway 환경에서 안정적인 실행을 위한 옵션 추가
+exec uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port $PORT \
+    --log-level info \
+    --access-log \
+    --no-use-colors \
+    --loop asyncio 
