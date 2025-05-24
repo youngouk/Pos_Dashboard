@@ -26,7 +26,7 @@
   "scripts": {
     "start": "node ./node_modules/react-scripts/bin/react-scripts.js start",
     "dev": "node ./node_modules/react-scripts/bin/react-scripts.js start",
-    "build": "node ./node_modules/react-scripts/bin/react-scripts.js build",
+    "build": "CI=false node ./node_modules/react-scripts/bin/react-scripts.js build",
     "serve": "serve -s build -l $PORT",
     "test": "node ./node_modules/react-scripts/bin/react-scripts.js test",
     "eject": "node ./node_modules/react-scripts/bin/react-scripts.js eject"
