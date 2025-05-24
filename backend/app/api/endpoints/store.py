@@ -11,6 +11,7 @@ router = APIRouter()
 logger = logging.getLogger("store_api")
 
 @router.get("/", response_model=List[StoreListResponse])
+@router.get("", response_model=List[StoreListResponse])
 async def get_stores():
     """
     모든 매장 목록을 조회합니다.
