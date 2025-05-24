@@ -4,25 +4,26 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Ensure database file has correct permissions
-RUN chmod 644 lepain_local.db
+# Set permissions
+RUN chmod 644 lepain_local.db && \
+    chmod +x start.sh
 
-RUN chmod +x start.sh
-
-# Railway 웹 서비스 인식을 위한 포트 EXPOSE
+# Expose port for Railway web service detection
 EXPOSE 8080
 
-# Shell 형태로 실행하여 환경변수 확장 보장
-CMD ["/bin/bash", "-c", "./start.sh"]
+# Run uvicorn directly (Railway web service)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "info"]
