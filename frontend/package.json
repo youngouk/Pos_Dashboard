@@ -11,7 +11,6 @@
     "axios": "^1.6.8",
     "d3": "^7.8.5",
     "date-fns": "^3.6.0",
-    "express": "^4.18.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "react": "^18.2.0",
@@ -23,7 +22,6 @@
     "react-scripts": "5.0.1",
     "recharts": "^2.12.3",
     "remark-breaks": "^4.0.0",
-    "serve": "^14.2.0",
     "web-vitals": "^3.5.2"
   },
   "scripts": {

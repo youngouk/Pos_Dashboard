@@ -23,11 +23,15 @@ Base = declarative_base()
 # 데이터베이스 경로
 import os
 
-# Railway 배포 환경에서는 현재 디렉토리에서 데이터베이스 파일을 찾음
-if os.path.exists("lepain_local.db"):
-    # Railway 배포 환경 - 현재 디렉토리에 데이터베이스 파일이 있음
+# Railway 배포 환경에서는 데이터 디렉토리에서 직접 찾음
+if os.path.exists("data/lepain.db"):
+    # Railway 배포 환경 - data 디렉토리에 있는 경우
+    DB_PATH = os.path.abspath("data/lepain.db")
+    logger.info("Using database from data directory (Railway deployment)")
+elif os.path.exists("lepain_local.db"):
+    # 이전 설정 호환
     DB_PATH = os.path.abspath("lepain_local.db")
-    logger.info("Using database from current directory (Railway deployment)")
+    logger.info("Using database from current directory")
 else:
     # 로컬 개발 환경 - 기존 경로 사용
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "LePain.db")
