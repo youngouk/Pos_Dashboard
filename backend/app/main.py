@@ -62,6 +62,7 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="LePain Store Dashboard API",
     debug=settings.DEBUG,
+    redirect_slashes=False,  # 307 리디렉션 방지
 )
 
 # CORS 미들웨어 설정 - 모든 origin 허용 (MVP용)

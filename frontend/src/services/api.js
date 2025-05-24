@@ -73,6 +73,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  maxRedirects: 5,  // 307 리디렉션 자동 처리
   // 파라미터 직렬화 설정 개선 - store_name 처리 로직 추가
   paramsSerializer: params => {
     // 전처리: store_name 파라미터 처리
