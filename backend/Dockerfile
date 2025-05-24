@@ -27,5 +27,5 @@ RUN chmod 644 lepain_local.db
 # Railway에서 동적으로 할당하는 포트 노출
 EXPOSE 8080
 
-# 서버 시작
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# 서버 시작 (python 모듈로 실행)
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
