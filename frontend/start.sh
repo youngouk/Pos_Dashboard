@@ -36,4 +36,4 @@ serve --version
 
 # 서버 시작 - serve는 기본적으로 0.0.0.0에 바인딩됩니다
 echo "Starting serve on port $PORT (binding to 0.0.0.0 by default)"
-exec serve -s build -p $PORT 
+exec serve -s build -p $PORT --no-clipboard --no-redirect 
