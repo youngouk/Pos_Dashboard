@@ -13,15 +13,23 @@ from app.services.store_service import store_service
 
 # 로거 설정
 logger = logging.getLogger("main")
-# 전체 로그 수준 설정
-logging_level = logging.DEBUG if settings.DEBUG else logging.getLevelName(settings.LOG_LEVEL)
+# 전체 로그 수준 설정 - Railway 호환성 개선
+if settings.DEBUG:
+    logging_level = logging.DEBUG
+else:
+    # LOG_LEVEL이 문자열인 경우 정수로 변환
+    if isinstance(settings.LOG_LEVEL, str):
+        logging_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
+    else:
+        logging_level = settings.LOG_LEVEL
+
 logging.basicConfig(
     level=logging_level,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# 서드파티 라이브러리 로그 수준 조정
+# 서드파티 라이브러리 로그 수준 조정 - Railway 최적화
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("uvicorn").setLevel(logging.INFO)
@@ -32,6 +40,13 @@ logging.getLogger("hpack.hpack").setLevel(logging.ERROR)
 logging.getLogger("hpack.table").setLevel(logging.ERROR)
 logging.getLogger("h2").setLevel(logging.WARNING)
 logging.getLogger("h2.connection").setLevel(logging.WARNING)
+
+# Railway 환경에서 로그 레벨 강제 설정
+import os
+if os.getenv("RAILWAY_ENVIRONMENT"):
+    # Railway에서는 INFO 레벨로 제한하여 로그 오분류 방지
+    logging.getLogger().setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
 
 # FastAPI 앱 인스턴스 생성
 app = FastAPI(
