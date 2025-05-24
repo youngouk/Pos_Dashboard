@@ -13,6 +13,13 @@ RUN npm install
 # 애플리케이션 코드 복사
 COPY . .
 
+# Build argument로 환경변수 받기
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# 빌드 시 환경변수 확인 (디버깅용)
+RUN echo "Building with REACT_APP_API_URL: $REACT_APP_API_URL"
+
 # 프로덕션 빌드
 RUN npm run build
 
