@@ -9,6 +9,7 @@ import { kpiService, salesService, compareService } from '../services/api';
 import { FiDollarSign, FiUsers, FiShoppingCart, FiPercent } from 'react-icons/fi';
 import { BarChart as ReBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList, Cell } from 'recharts';
 import PageAnalysisWidget from '../components/analytics/PageAnalysisWidget';
+import ComingSoonOverlay from '../components/common/ComingSoonOverlay';
 
 const DashboardPage = () => {
   const { 
@@ -1179,11 +1180,20 @@ const DashboardPage = () => {
   };
   
   return (
-    <div>
-      {/* Store Selection - Dropdown Version */}
-        <div className="flex justify-between items-center mb-4">
-          <div></div>
-        </div>
+    <div className="relative">
+      {/* Coming Soon 오버레이 */}
+      <ComingSoonOverlay 
+        title="대시보드 페이지"
+        subtitle="종합적인 매장 운영 현황을 한눈에 볼 수 있는 대시보드를 준비 중입니다"
+        iconType="eye"
+      />
+
+      {/* 기존 페이지 컨텐츠 */}
+      <div>
+        {/* Store Selection - Dropdown Version */}
+          <div className="flex justify-between items-center mb-4">
+            <div></div>
+          </div>
       
       {/* 전체 페이지 AI 분석 위젯 추가 */}
       <PageAnalysisWidget
@@ -1572,7 +1582,8 @@ const DashboardPage = () => {
         </div>
       )}
       
-    </div>
+      </div> {/* 기존 페이지 컨텐츠 닫는 태그 */}
+    </div> {/* relative 컨테이너 닫는 태그 */}
   );
 };
 
