@@ -14,6 +14,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { BarChart as ReBarChart, Bar, LabelList } from 'recharts';
 import CacheClearButton from '../components/common/CacheClearButton';
+import LoadingPopup from '../components/common/LoadingPopup';
 
 /**
  * 매장비교 페이지 (벤치마크 상/하위 25% 매장과 비교)
@@ -83,6 +84,9 @@ const BenchmarkComparePage = () => {
   const [dailyDataBottom, setDailyDataBottom] = useState([]);
   const [productDataStore, setProductDataStore] = useState([]);
   const [productDataBenchmark, setProductDataBenchmark] = useState([]);
+
+  // 로딩 팝업 상태 추가
+  const [showLoadingPopup, setShowLoadingPopup] = useState(true);
 
   /* --------------------------- 공통 파라미터 생성 -------------------------- */
   // pass store_name as array so Supabase in_ filter works
@@ -755,7 +759,7 @@ const BenchmarkComparePage = () => {
             `${item.formatter(Math.abs(diff))} 만큼 ${item.unit} ${comparisonText}`;
           
           return (
-            <div key={index} className="grid gap-4 py-4 border-b border-gray-100 last:border-b-0" style={{ gridTemplateColumns: '120px 1fr 1fr 2fr' }}>
+            <div key={index} className="grid gap-4 py-4 border-b border-gray-100" style={{ gridTemplateColumns: '120px 1fr 1fr 2fr' }}>
               {/* 지표 이름 */}
               <div className="text-lg font-medium text-gray-800 flex items-center justify-center">
                 {item.label}
@@ -1197,6 +1201,14 @@ const BenchmarkComparePage = () => {
         </button>
       </div>
       <CacheClearButton />
+
+      {/* 로딩 팝업 */}
+      <LoadingPopup 
+        isVisible={showLoadingPopup}
+        message="매장 비교 데이터를 가져오고 있습니다"
+        duration={350}
+        onComplete={() => setShowLoadingPopup(false)}
+      />
     </div>
   );
 };

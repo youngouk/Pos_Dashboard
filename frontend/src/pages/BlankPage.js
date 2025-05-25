@@ -14,6 +14,7 @@ import DeltaBadge from '../components/common/DeltaBadge';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import CacheClearButton from '../components/common/CacheClearButton';
+import LoadingPopup from '../components/common/LoadingPopup';
 
 // API URL 설정
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -76,6 +77,73 @@ const StoreStatusAnalysisPage = () => {
   const [summaryAiAnalysisResult, setSummaryAiAnalysisResult] = useState('');
   const [summaryAiAnalysisError, setSummaryAiAnalysisError] = useState('');
   const [summaryEditMode, setSummaryEditMode] = useState(false);
+
+  // 로딩 팝업 상태 추가
+  const [showLoadingPopup, setShowLoadingPopup] = useState(true);
+
+  // BlankPage 전용 기본 필터 설정 (2월달, 석촌점)
+  useEffect(() => {
+    console.log('🎯 BlankPage 기본 필터 설정 시작');
+    console.log('🎯 현재 stores 목록:', stores);
+    console.log('🎯 현재 필터 상태:', filters);
+    
+    // 매장 목록이 로드되지 않았으면 대기
+    if (!stores || stores.length === 0) {
+      console.log('🎯 매장 목록이 아직 로드되지 않음, 대기 중...');
+      return;
+    }
+    
+    // 2025년 2월 1일 ~ 2월 28일로 설정
+    const defaultDateRange = {
+      startDate: '2025-02-01',
+      endDate: '2025-02-28'
+    };
+    
+    const defaultStore = '석촌점';
+    
+    // 석촌점이 매장 목록에 있는지 확인
+    const isStoreAvailable = stores.includes(defaultStore);
+    console.log('🎯 석촌점 매장 존재 여부:', isStoreAvailable);
+    
+    if (!isStoreAvailable) {
+      console.log('🎯 석촌점이 매장 목록에 없음. 사용 가능한 매장:', stores);
+      // 석촌점이 없으면 첫 번째 매장을 선택 (전체 제외)
+      const availableStores = stores.filter(store => store !== '전체');
+      if (availableStores.length > 0) {
+        const fallbackStore = availableStores[0];
+        console.log('🎯 대체 매장으로 설정:', fallbackStore);
+        
+        // 대체 매장으로 필터 업데이트
+        updateFilters({
+          dateRange: defaultDateRange,
+          selectedStore: fallbackStore
+        });
+      } else {
+        console.log('🎯 사용 가능한 매장이 없음');
+      }
+      return;
+    }
+    
+    // 현재 필터와 다른 경우에만 업데이트
+    const needsUpdate = 
+      filters.dateRange.startDate !== defaultDateRange.startDate ||
+      filters.dateRange.endDate !== defaultDateRange.endDate ||
+      filters.selectedStore !== defaultStore;
+    
+    if (needsUpdate) {
+      console.log('🎯 BlankPage 기본 필터 적용:', {
+        dateRange: defaultDateRange,
+        selectedStore: defaultStore
+      });
+      
+      updateFilters({
+        dateRange: defaultDateRange,
+        selectedStore: defaultStore
+      });
+    } else {
+      console.log('🎯 BlankPage 기본 필터가 이미 설정되어 있음');
+    }
+  }, [stores, updateFilters]); // stores와 updateFilters를 의존성에 추가
 
   // Load saved performance summary on mount
   useEffect(() => {
@@ -301,11 +369,44 @@ const StoreStatusAnalysisPage = () => {
         console.log('🔍 선택된 매장:', filters.selectedStore);
         // 데이터가 존재하고 선택된 매장이 있을 때만 필터링
         if (data && Array.isArray(data) && data.length > 0) {
-          const filteredData = filters.selectedStore 
-            ? data.filter(item => item.store_name === filters.selectedStore)
-            : data;
-          console.log('🔍 필터링된 Daily 데이터:', filteredData);
-          setDailyData(filteredData);
+          let processedData;
+          
+          if (filters.selectedStore) {
+            // 특정 매장 선택 시: 해당 매장 데이터만 필터링
+            processedData = data.filter(item => item.store_name === filters.selectedStore);
+          } else {
+            // 전체 매장 선택 시: 일자별로 모든 매장 데이터 합산
+            const aggregatedByDate = {};
+            
+            data.forEach(item => {
+              const date = item.date;
+              if (!aggregatedByDate[date]) {
+                aggregatedByDate[date] = {
+                  date: date,
+                  total_sales: 0,
+                  transaction_count: 0,
+                  store_name: '전체 매장' // 표시용
+                };
+              }
+              
+              aggregatedByDate[date].total_sales += (item.total_sales || 0);
+              aggregatedByDate[date].transaction_count += (item.transaction_count || 0);
+            });
+            
+            // 객단가 계산 (매출 / 거래 수)
+            processedData = Object.values(aggregatedByDate).map(item => ({
+              ...item,
+              avg_transaction_value: item.transaction_count > 0 
+                ? item.total_sales / item.transaction_count 
+                : 0
+            }));
+            
+            // 날짜순 정렬
+            processedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          }
+          
+          console.log('🔍 처리된 Daily 데이터:', processedData);
+          setDailyData(processedData);
         } else {
           console.log('🔍 Daily 데이터가 비어있음');
           setDailyData([]);
@@ -2108,6 +2209,14 @@ const StoreStatusAnalysisPage = () => {
         <ReviewAnalysisSection onExportPdf={handleExportPdf} />
       </div>
       <CacheClearButton />
+      
+      {/* 로딩 팝업 */}
+      <LoadingPopup 
+        isVisible={showLoadingPopup}
+        message="데이터를 가져오고 있습니다"
+        duration={2000}
+        onComplete={() => setShowLoadingPopup(false)}
+      />
     </>
   );
 };

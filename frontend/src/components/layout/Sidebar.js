@@ -47,7 +47,25 @@ const Sidebar = () => {
         </Link>
       </div>
       
-      <div className="flex flex-col items-center w-full px-4 space-y-2 mt-4">
+      {/* 사이드바 접고 펼치기 버튼 - 상단으로 이동 */}
+      <button 
+        onClick={toggleSidebar}
+        className={`mb-6 p-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex ${sidebarExpanded ? 'justify-start w-full mx-4' : 'justify-center'} items-center`}
+        title={sidebarExpanded ? "사이드바 접기" : "사이드바 펼치기"}
+      >
+        {sidebarExpanded ? (
+          <>
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="ml-3 text-sm font-medium">메뉴 숨기기</span>
+          </>
+        ) : (
+          <FiChevronRight size={18} />
+        )}
+      </button>
+      
+      <div className="flex flex-col items-center w-full px-4 space-y-2">
         {menuItems.map((item) => (
           <Link
             key={item.path}
@@ -65,7 +83,7 @@ const Sidebar = () => {
         ))}
       </div>
       
-      <div className="mt-auto flex flex-col w-full px-4 space-y-2 pt-10">
+      {/* <div className="mt-auto flex flex-col w-full px-4 space-y-2 pt-10">
         <Link
           to="/api-test"
           className={`w-full p-3 rounded-lg transition-colors flex ${sidebarExpanded ? 'justify-start' : 'justify-center'} items-center ${
@@ -102,16 +120,7 @@ const Sidebar = () => {
           <span className="flex-shrink-0"><FiHelpCircle size={22} /></span>
           {sidebarExpanded && <span className="ml-3 text-sm font-medium">도움말</span>}
         </Link>
-      </div>
-      
-      {/* 사이드바 접고 펼치기 버튼 */}
-      <button 
-        onClick={toggleSidebar}
-        className="mt-8 p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
-        title={sidebarExpanded ? "사이드바 접기" : "사이드바 펼치기"}
-      >
-        {sidebarExpanded ? <FiChevronLeft size={18} /> : <FiChevronRight size={18} />}
-      </button>
+      </div> */}
     </div>
   );
 };

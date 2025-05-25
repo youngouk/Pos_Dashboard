@@ -16,7 +16,8 @@ const DashboardPage = () => {
     filters,
     setError, 
     fetchApiData,
-    invalidateCache
+    invalidateCache,
+    sidebarExpanded
   } = useDashboard();
   
   // State for dashboard data with initial empty values
@@ -1180,410 +1181,411 @@ const DashboardPage = () => {
   };
   
   return (
-    <div className="relative">
-      {/* Coming Soon 오버레이 */}
-      <ComingSoonOverlay 
-        title="대시보드 페이지"
-        subtitle="종합적인 매장 운영 현황을 한눈에 볼 수 있는 대시보드를 준비 중입니다"
-        iconType="eye"
-      />
-
+    <div>
       {/* 기존 페이지 컨텐츠 */}
-      <div>
+      <div className="relative">
+        {/* Coming Soon 오버레이 */}
+        <ComingSoonOverlay 
+          title="대시보드 페이지"
+          subtitle="매장 운영 현황을 한눈에 볼 수 있는 페이지를 준비 중입니다"
+          iconType="eye"
+          sidebarWidth={sidebarExpanded ? "200px" : "80px"}
+        />
+
         {/* Store Selection - Dropdown Version */}
           <div className="flex justify-between items-center mb-4">
             <div></div>
           </div>
-      
-      {/* 전체 페이지 AI 분석 위젯 추가 */}
-      <PageAnalysisWidget
-        pageData={{
-          kpiData,
-          dailySales,
-          hourlySales,
-          productSales,
-          topPerformers,
-          storeComparison
-        }}
-        pageContext={{
-          dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-          selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
-        }}
-      />
+
+        {/* 전체 페이지 AI 분석 위젯 추가 */}
+        <PageAnalysisWidget
+          pageData={{
+            kpiData,
+            dailySales,
+            hourlySales,
+            productSales,
+            topPerformers,
+            storeComparison
+          }}
+          pageContext={{
+            dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+            selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
+          }}
+        />
 
 
-      {/* KPI Cards */}
-      {kpiData && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-          <KPICard
-            title="총 매출"
-            value={typeof kpiData.total_sales === 'number' ? kpiData.total_sales : 0}
-            previousValue={kpiData.previous_total_sales}
-            formatter={formatCurrency}
-            icon={<FiDollarSign size={18} />}
-          />
-          
-          <KPICard
-            title="방문 고객수"
-            value={typeof kpiData.total_customers === 'number' ? kpiData.total_customers : 0}
-            previousValue={kpiData.previous_total_customers}
-            formatter={(val) => (typeof val === 'number' ? val.toLocaleString() + '명' : '-')}
-            icon={<FiUsers size={18} />}
-          />
-          
-          <KPICard
-            title="할인율"
-            value={typeof kpiData.discount_rate === 'number' ? kpiData.discount_rate : 0}
-            previousValue={kpiData.previous_discount_rate}
-            formatter={(val) => (typeof val === 'number' ? val.toFixed(1) + '%' : '-')}
-            icon={<FiPercent size={18} />}
-            trendIsPositive={false}
-          />
-        </div>
-      )}
-
-      {/* Store Comparison Chart */}
-      {storeComparison && (
-        <div className="bg-white rounded-panze shadow-panze p-5 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-panze-dark">
-              {storeComparison.store_name} vs {benchmarkNamesKr[storeComparison.benchmark_type]}
-            </h2>
-            <select
-              value={storeComparison.store_name}
-              onChange={e => {
-                setShowAllStores(false);
-                setSelectedStores([e.target.value]);
-              }}
-              className="border px-2 py-1 rounded text-sm"
-            >
-              {filters.stores.filter(s => s.id !== 'all').map(s => (
-                <option key={s.name} value={s.name}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <ResponsiveContainer width="100%" height={storeComparison.metrics.length * 60}>
-            <ReBarChart
-              layout="vertical"
-              data={storeComparison.metrics.map(m => ({
-                metric: metricNamesKr[m.metric_name] || m.display_name,
-                percent: m.percent_difference,
-                // 색상 결정: 음수/양수/0
-                fillColor:
-                  m.percent_difference > 0
-                    ? '#38BDF8' // 긍정(블루)
-                    : m.percent_difference < 0
-                    ? '#F87171' // 위험(레드)
-                    : '#E5E7EB', // 중립(그레이)
-              }))}
-              margin={{ left: 120, right: 30, top: 20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" unit="%" />
-              <YAxis dataKey="metric" type="category" width={120} />
-              <Tooltip formatter={value => `${value.toFixed(1)}%`} />
-              <Bar dataKey="percent">
-                {storeComparison.metrics.map((m, idx) => (
-                  <Cell
-                    key={`cell-${idx}`}
-                    fill={
-                      m.percent_difference > 0
-                        ? '#38BDF8'
-                        : m.percent_difference < 0
-                        ? '#F87171'
-                        : '#E5E7EB'
-                    }
-                  />
-                ))}
-                <LabelList dataKey="percent" position="right" formatter={value => `${value.toFixed(1)}%`} />
-              </Bar>
-            </ReBarChart>
-          </ResponsiveContainer>
-          <div className="mt-4">
-            {storeComparison.insights.map((insight, idx) => (
-              <p key={idx} className="text-sm text-gray-700 mb-1">• {insight}</p>
-            ))}
-          </div>
-          {/* AI 분석 위젯 추가 */}
-          <ChartAnalysisWidget
-            chartType="storeComparison"
-            chartData={storeComparison.metrics.map(m => ({
-              metric: metricNamesKr[m.metric_name] || m.metric_name,
-              value: m.percent_difference
-            }))}
-            chartTitle={`${storeComparison.store_name} vs ${benchmarkNamesKr[storeComparison.benchmark_type]}`}
-            chartContext={{
-              dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-              selectedStores: `${storeComparison.store_name} vs ${benchmarkNamesKr[storeComparison.benchmark_type]}`
-            }}
-          />
-        </div>
-      )}
-      
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Sales Trends Chart */}
-        <div className="bg-white rounded-panze shadow-panze p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-panze-dark">일별 매출 추이</h2>
+        {/* KPI Cards */}
+        {kpiData && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+            <KPICard
+              title="총 매출"
+              value={typeof kpiData.total_sales === 'number' ? kpiData.total_sales : 0}
+              previousValue={kpiData.previous_total_sales}
+              formatter={formatCurrency}
+              icon={<FiDollarSign size={18} />}
+            />
             
-            {/* 이동평균보기 버튼 추가 - 개선된 UI */}
-            <div className="flex gap-2">
-              <button 
-                onClick={() => {
-                  // 이동평균 버튼 클릭 시 동작 개선
-                  if (!showMovingAverage) {
-                    // 이동평균 켜기: 이동평균선만 표시
-                    setShowMovingAverage(true);
-                    setShowMovingAverageOnly(true);
-                  } else {
-                    // 이동평균 끄기: 원본 데이터선만 표시
-                    setShowMovingAverage(false);
-                    setShowMovingAverageOnly(false);
-                  }
+            <KPICard
+              title="방문 고객수"
+              value={typeof kpiData.total_customers === 'number' ? kpiData.total_customers : 0}
+              previousValue={kpiData.previous_total_customers}
+              formatter={(val) => (typeof val === 'number' ? val.toLocaleString() + '명' : '-')}
+              icon={<FiUsers size={18} />}
+            />
+            
+            <KPICard
+              title="할인율"
+              value={typeof kpiData.discount_rate === 'number' ? kpiData.discount_rate : 0}
+              previousValue={kpiData.previous_discount_rate}
+              formatter={(val) => (typeof val === 'number' ? val.toFixed(1) + '%' : '-')}
+              icon={<FiPercent size={18} />}
+              trendIsPositive={false}
+            />
+          </div>
+        )}
+
+        {/* Store Comparison Chart */}
+        {storeComparison && (
+          <div className="bg-white rounded-panze shadow-panze p-5 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-panze-dark">
+                {storeComparison.store_name} vs {benchmarkNamesKr[storeComparison.benchmark_type]}
+              </h2>
+              <select
+                value={storeComparison.store_name}
+                onChange={e => {
+                  setShowAllStores(false);
+                  setSelectedStores([e.target.value]);
                 }}
-                className={`px-3 py-1 rounded-md text-sm transition-colors flex items-center ${
-                  showMovingAverage 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                title="15일 이동평균선을 표시하고 원본 데이터선을 숨깁니다"
+                className="border px-2 py-1 rounded text-sm"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="w-4 h-4 mr-1"
-                >
-                  <path d="M3 10L7 14L13 8L17 12L21 8"></path>
-                </svg>
-                {showMovingAverage ? '이동평균 숨기기' : '이동평균 보기'}
-              </button>
-              
-              {/* 원본/이동평균 토글 버튼 (이동평균이 켜져 있을 때만 표시) */}
-              {showMovingAverage && (
-                <button 
-                  onClick={() => setShowMovingAverageOnly(!showMovingAverageOnly)}
-                  className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                    !showMovingAverageOnly 
-                    ? 'bg-gray-700 text-white' 
-                    : 'bg-gray-200 text-gray-700'
-                  }`}
-                  title={showMovingAverageOnly ? "원본 데이터선도 함께 표시" : "이동평균선만 표시"}
-                >
-                  {showMovingAverageOnly ? '원본 데이터 표시' : '원본 데이터 숨기기'}
-                </button>
-              )}
+                {filters.stores.filter(s => s.id !== 'all').map(s => (
+                  <option key={s.name} value={s.name}>{s.name}</option>
+                ))}
+              </select>
             </div>
+            <ResponsiveContainer width="100%" height={storeComparison.metrics.length * 60}>
+              <ReBarChart
+                layout="vertical"
+                data={storeComparison.metrics.map(m => ({
+                  metric: metricNamesKr[m.metric_name] || m.display_name,
+                  percent: m.percent_difference,
+                  // 색상 결정: 음수/양수/0
+                  fillColor:
+                    m.percent_difference > 0
+                      ? '#38BDF8' // 긍정(블루)
+                      : m.percent_difference < 0
+                      ? '#F87171' // 위험(레드)
+                      : '#E5E7EB', // 중립(그레이)
+                }))}
+                margin={{ left: 120, right: 30, top: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" unit="%" />
+                <YAxis dataKey="metric" type="category" width={120} />
+                <Tooltip formatter={value => `${value.toFixed(1)}%`} />
+                <Bar dataKey="percent">
+                  {storeComparison.metrics.map((m, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={
+                        m.percent_difference > 0
+                          ? '#38BDF8'
+                          : m.percent_difference < 0
+                          ? '#F87171'
+                          : '#E5E7EB'
+                      }
+                    />
+                  ))}
+                  <LabelList dataKey="percent" position="right" formatter={value => `${value.toFixed(1)}%`} />
+                </Bar>
+              </ReBarChart>
+            </ResponsiveContainer>
+            <div className="mt-4">
+              {storeComparison.insights.map((insight, idx) => (
+                <p key={idx} className="text-sm text-gray-700 mb-1">• {insight}</p>
+              ))}
+            </div>
+            {/* AI 분석 위젯 추가 */}
+            <ChartAnalysisWidget
+              chartType="storeComparison"
+              chartData={storeComparison.metrics.map(m => ({
+                metric: metricNamesKr[m.metric_name] || m.metric_name,
+                value: m.percent_difference
+              }))}
+              chartTitle={`${storeComparison.store_name} vs ${benchmarkNamesKr[storeComparison.benchmark_type]}`}
+              chartContext={{
+                dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+                selectedStores: `${storeComparison.store_name} vs ${benchmarkNamesKr[storeComparison.benchmark_type]}`
+              }}
+            />
+          </div>
+        )}
+        
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Sales Trends Chart */}
+          <div className="bg-white rounded-panze shadow-panze p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-panze-dark">일별 매출 추이</h2>
+              
+              {/* 이동평균보기 버튼 추가 - 개선된 UI */}
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    // 이동평균 버튼 클릭 시 동작 개선
+                    if (!showMovingAverage) {
+                      // 이동평균 켜기: 이동평균선만 표시
+                      setShowMovingAverage(true);
+                      setShowMovingAverageOnly(true);
+                    } else {
+                      // 이동평균 끄기: 원본 데이터선만 표시
+                      setShowMovingAverage(false);
+                      setShowMovingAverageOnly(false);
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-md text-sm transition-colors flex items-center ${
+                    showMovingAverage 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="15일 이동평균선을 표시하고 원본 데이터선을 숨깁니다"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="w-4 h-4 mr-1"
+                  >
+                    <path d="M3 10L7 14L13 8L17 12L21 8"></path>
+                  </svg>
+                  {showMovingAverage ? '이동평균 숨기기' : '이동평균 보기'}
+                </button>
+                
+                {/* 원본/이동평균 토글 버튼 (이동평균이 켜져 있을 때만 표시) */}
+                {showMovingAverage && (
+                  <button 
+                    onClick={() => setShowMovingAverageOnly(!showMovingAverageOnly)}
+                    className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                      !showMovingAverageOnly 
+                      ? 'bg-gray-700 text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                    }`}
+                    title={showMovingAverageOnly ? "원본 데이터선도 함께 표시" : "이동평균선만 표시"}
+                  >
+                    {showMovingAverageOnly ? '원본 데이터 표시' : '원본 데이터 숨기기'}
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {dailySales.length > 0 && (
+              <>
+                <LineChart
+                  data={prepareDailySalesChart()}
+                  xDataKey="date"
+                  lines={getDailySalesLines()}
+                  connectNulls={true}  // null 값을 연결
+                  allowDecimals={false}  // Y축에 소수점 표시 방지
+                  fillEmptyValues={false}  // 비어있는 값을 0으로 채우지 않음
+                  showMovingAverageOnly={showMovingAverageOnly}  // 이동평균만 표시 모드
+                />
+
+                {/* AI 분석 위젯 추가 */}
+                <ChartAnalysisWidget
+                  chartType="dailySales"
+                  chartData={prepareDailySalesChart()}
+                  chartTitle="일별 매출 추이"
+                  chartContext={{
+                    dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+                    selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', '),
+                    movingAverageEnabled: showMovingAverage
+                  }}
+                />
+              </>
+            )}
           </div>
           
-          {dailySales.length > 0 && (
-            <>
-              <LineChart
-                data={prepareDailySalesChart()}
-                xDataKey="date"
-                lines={getDailySalesLines()}
-                connectNulls={true}  // null 값을 연결
-                allowDecimals={false}  // Y축에 소수점 표시 방지
-                fillEmptyValues={false}  // 비어있는 값을 0으로 채우지 않음
-                showMovingAverageOnly={showMovingAverageOnly}  // 이동평균만 표시 모드
-              />
+          {/* Hourly Sales Chart */}
+          <div className="bg-white rounded-panze shadow-panze p-5">
+            <h2 className="text-lg font-semibold mb-4 text-panze-dark">시간대별 매출</h2>
+            {hourlySales.length > 0 && (
+              <>
+                <LineChart
+                  data={formatHourlyData()}
+                  xDataKey="hour"
+                  lines={[
+                    { dataKey: '매출', name: '매출액', color: '#3498DB' },
+                    { dataKey: '고객수', name: '고객수', color: '#FF8C00' },
+                  ]}
+                  connectNulls={true}
+                  allowDecimals={false}
+                />
 
-              {/* AI 분석 위젯 추가 */}
-              <ChartAnalysisWidget
-                chartType="dailySales"
-                chartData={prepareDailySalesChart()}
-                chartTitle="일별 매출 추이"
-                chartContext={{
-                  dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-                  selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', '),
-                  movingAverageEnabled: showMovingAverage
-                }}
-              />
-            </>
-          )}
+                {/* AI 분석 위젯 추가 */}
+                <ChartAnalysisWidget
+                  chartType="hourlySales"
+                  chartData={formatHourlyData()}
+                  chartTitle="시간대별 매출"
+                  chartContext={{
+                    dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+                    selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
+                  }}
+                />
+              </>
+            )}
+            {/* 디버깅 정보 표시 - 개발 모드 */}
+            {process.env.NODE_ENV === 'development' && hourlySales.length === 0 && (
+              <div className="p-3 bg-red-50 text-red-600 rounded">
+                <p className="font-semibold">시간대별 매출 데이터 없음</p>
+                <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Hourly Sales Chart */}
-        <div className="bg-white rounded-panze shadow-panze p-5">
-          <h2 className="text-lg font-semibold mb-4 text-panze-dark">시간대별 매출</h2>
-          {hourlySales.length > 0 && (
-            <>
-              <LineChart
-                data={formatHourlyData()}
-                xDataKey="hour"
-                lines={[
-                  { dataKey: '매출', name: '매출액', color: '#3498DB' },
-                  { dataKey: '고객수', name: '고객수', color: '#FF8C00' },
-                ]}
-                connectNulls={true}
-                allowDecimals={false}
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Product Sales Bar Chart */}
+          <div className="bg-white rounded-panze shadow-panze p-5">
+            <h2 className="text-lg font-semibold mb-4 text-panze-dark">상품별 매출</h2>
+            {productSales.length > 0 && formatProductData().length > 0 && (
+              <>
+                <BarChart
+                  data={(formatProductData() || []).map(item => ({
+                    product: item.name || '',
+                    매출: item.value || 0,
+                    수량: (item.quantity || 0) * 10000, // 스케일링하여 같은 차트에 표시
+                    매장: item.store || '전체',
+                  }))}
+                  xDataKey="product"
+                  barDataKey="매출"
+                  barName="매출액"
+                  secondaryDataKey="수량"
+                  secondaryBarName="판매 수량"
+                  layout="vertical"
+                />
 
-              {/* AI 분석 위젯 추가 */}
-              <ChartAnalysisWidget
-                chartType="hourlySales"
-                chartData={formatHourlyData()}
-                chartTitle="시간대별 매출"
-                chartContext={{
-                  dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-                  selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
-                }}
-              />
-            </>
-          )}
-          {/* 디버깅 정보 표시 - 개발 모드 */}
-          {process.env.NODE_ENV === 'development' && hourlySales.length === 0 && (
-            <div className="p-3 bg-red-50 text-red-600 rounded">
-              <p className="font-semibold">시간대별 매출 데이터 없음</p>
-              <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Product Sales Bar Chart */}
-        <div className="bg-white rounded-panze shadow-panze p-5">
-          <h2 className="text-lg font-semibold mb-4 text-panze-dark">상품별 매출</h2>
-          {productSales.length > 0 && formatProductData().length > 0 && (
-            <>
-              <BarChart
-                data={(formatProductData() || []).map(item => ({
-                  product: item.name || '',
-                  매출: item.value || 0,
-                  수량: (item.quantity || 0) * 10000, // 스케일링하여 같은 차트에 표시
-                  매장: item.store || '전체',
-                }))}
-                xDataKey="product"
-                barDataKey="매출"
-                barName="매출액"
-                secondaryDataKey="수량"
-                secondaryBarName="판매 수량"
-                layout="vertical"
-              />
-
-              {/* AI 분석 위젯 추가 */}
-              <ChartAnalysisWidget
-                chartType="productSales"
-                chartData={formatProductData()}
-                chartTitle="상품별 매출"
-                chartContext={{
-                  dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-                  selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
-                }}
-              />
-            </>
-          )}
-          {/* 디버깅 정보 표시 - 개발 모드 */}
-          {process.env.NODE_ENV === 'development' && (productSales.length === 0 || formatProductData().length === 0) && (
-            <div className="p-3 bg-red-50 text-red-600 rounded">
-              <p className="font-semibold">상품별 매출 데이터 없음</p>
-              <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
-              <p className="text-sm">원본 데이터 개수: {productSales.length}</p>
-              <p className="text-sm">포맷 데이터 개수: {formatProductData().length}</p>
-            </div>
-          )}
+                {/* AI 분석 위젯 추가 */}
+                <ChartAnalysisWidget
+                  chartType="productSales"
+                  chartData={formatProductData()}
+                  chartTitle="상품별 매출"
+                  chartContext={{
+                    dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+                    selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
+                  }}
+                />
+              </>
+            )}
+            {/* 디버깅 정보 표시 - 개발 모드 */}
+            {process.env.NODE_ENV === 'development' && (productSales.length === 0 || formatProductData().length === 0) && (
+              <div className="p-3 bg-red-50 text-red-600 rounded">
+                <p className="font-semibold">상품별 매출 데이터 없음</p>
+                <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
+                <p className="text-sm">원본 데이터 개수: {productSales.length}</p>
+                <p className="text-sm">포맷 데이터 개수: {formatProductData().length}</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Product Sales Pie Chart */}
+          <div className="bg-white rounded-panze shadow-panze p-5">
+            <h2 className="text-lg font-semibold mb-4 text-panze-dark">상품 판매 비율</h2>
+            {productSales.length > 0 && formatProductData().length > 0 && (
+              <>
+                <PieChart
+                  data={formatProductData()}
+                  dataKey="value"
+                  nameKey="name"
+                  formatter={formatCurrency}
+                  donut={true}
+                  labelPosition="inside"
+                  showPercent={true}
+                  showLabelName={false}
+                  labelFormatter={(value, name, props) => {
+                    const percent = Math.round(props.percent * 100);
+                    return `${percent}%`;
+                  }}
+                />
+                
+                {/* AI 분석 위젯 추가 */}
+                <ChartAnalysisWidget
+                  chartType="productDistribution"
+                  chartData={formatProductData()}
+                  chartTitle="상품 판매 비율"
+                  chartContext={{
+                    dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
+                    selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
+                  }}
+                />
+              </>
+            )}
+            {/* 디버깅 정보 표시 - 개발 모드 */}
+            {process.env.NODE_ENV === 'development' && (productSales.length === 0 || formatProductData().length === 0) && (
+              <div className="p-3 bg-red-50 text-red-600 rounded">
+                <p className="font-semibold">상품 판매 비율 데이터 없음</p>
+                <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
+                <p className="text-sm">원본 데이터 개수: {productSales.length}</p>
+                <p className="text-sm">포맷 데이터 개수: {formatProductData().length}</p>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Product Sales Pie Chart */}
-        <div className="bg-white rounded-panze shadow-panze p-5">
-          <h2 className="text-lg font-semibold mb-4 text-panze-dark">상품 판매 비율</h2>
-          {productSales.length > 0 && formatProductData().length > 0 && (
-            <>
-              <PieChart
-                data={formatProductData()}
-                dataKey="value"
-                nameKey="name"
-                formatter={formatCurrency}
-                donut={true}
-                labelPosition="inside"
-                showPercent={true}
-                showLabelName={false}
-                labelFormatter={(value, name, props) => {
-                  const percent = Math.round(props.percent * 100);
-                  return `${percent}%`;
-                }}
-              />
-              
-              {/* AI 분석 위젯 추가 */}
-              <ChartAnalysisWidget
-                chartType="productDistribution"
-                chartData={formatProductData()}
-                chartTitle="상품 판매 비율"
-                chartContext={{
-                  dateRange: `${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}`,
-                  selectedStores: showAllStores ? '전체 매장' : selectedStores.join(', ')
-                }}
-              />
-            </>
-          )}
-          {/* 디버깅 정보 표시 - 개발 모드 */}
-          {process.env.NODE_ENV === 'development' && (productSales.length === 0 || formatProductData().length === 0) && (
-            <div className="p-3 bg-red-50 text-red-600 rounded">
-              <p className="font-semibold">상품 판매 비율 데이터 없음</p>
-              <p className="text-sm">선택된 매장: {selectedStores.join(', ') || '전체'}</p>
-              <p className="text-sm">원본 데이터 개수: {productSales.length}</p>
-              <p className="text-sm">포맷 데이터 개수: {formatProductData().length}</p>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* 상위 성과 매장 섹션 추가 */}
-      {topPerformers && topPerformers.performers && topPerformers.performers.length > 0 && (
-        <div className="bg-white rounded-panze shadow-panze p-5 mt-6">
-          <h2 className="text-lg font-semibold mb-4 text-panze-dark">
-            상위 성과 매장 ({topPerformers.metric_display_name})
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    순위
-                  </th>
-                  <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    매장
-                  </th>
-                  <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {topPerformers.metric_display_name}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {topPerformers.performers.map((performer) => (
-                  <tr key={`${performer.rank}-${performer.store_name}`} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-                        performer.rank <= 3 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'
-                      } font-medium text-xs`}>
-                        {performer.rank}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                      {performer.store_name}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-900">
-                      {formatCurrency(performer.metric_value)}
-                    </td>
+        {/* 상위 성과 매장 섹션 추가 */}
+        {topPerformers && topPerformers.performers && topPerformers.performers.length > 0 && (
+          <div className="bg-white rounded-panze shadow-panze p-5 mt-6">
+            <h2 className="text-lg font-semibold mb-4 text-panze-dark">
+              상위 성과 매장 ({topPerformers.metric_display_name})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      순위
+                    </th>
+                    <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      매장
+                    </th>
+                    <th className="py-2 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {topPerformers.metric_display_name}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {topPerformers.performers.map((performer) => (
+                    <tr key={`${performer.rank}-${performer.store_name}`} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                          performer.rank <= 3 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'
+                        } font-medium text-xs`}>
+                          {performer.rank}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                        {performer.store_name}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        {formatCurrency(performer.metric_value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-3 text-xs text-gray-500">
+              * 기간: {topPerformers.period}
+            </div>
           </div>
-          <div className="mt-3 text-xs text-gray-500">
-            * 기간: {topPerformers.period}
-          </div>
-        </div>
-      )}
-      
-      </div> {/* 기존 페이지 컨텐츠 닫는 태그 */}
-    </div> {/* relative 컨테이너 닫는 태그 */}
+        )}
+        
+      </div> {/* relative 컨테이너 닫는 태그 */}
+    </div> 
   );
 };
 

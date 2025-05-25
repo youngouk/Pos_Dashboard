@@ -5,9 +5,10 @@ import BarChart from '../components/charts/BarChart';
 import PieChart from '../components/charts/PieChart';
 import HeatMap from '../components/charts/HeatMap';
 import { salesService } from '../services/api';
+import ComingSoonOverlay from '../components/common/ComingSoonOverlay';
 
 const SalesPage = () => {
-  const { filters, setLoading, setError, fetchApiData } = useDashboard();
+  const { filters, setLoading, setError, fetchApiData, sidebarExpanded } = useDashboard();
   
   // State for sales data
   const [dailySales, setDailySales] = useState([]);
@@ -264,89 +265,102 @@ const SalesPage = () => {
   };
   
   return (
-    <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">매출 분석</h1>
-      
-      {/* Daily Sales Trend */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <h2 className="text-lg font-semibold mb-4">일별 매출 추이</h2>
-        {dailySales.length > 0 && (
-          <LineChart
-            data={safeData(dailySales).map(item => ({
-              date: item.date, // 'date' 필드를 'sales_date' 대신 사용
-              매출: item.total_sales,
-              주문수: item.transaction_count, // 'transaction_count' 필드를 'order_count' 대신 사용
-            }))}
-            xDataKey="date"
-            lines={[
-              { dataKey: '매출', name: '매출액' },
-              { dataKey: '주문수', name: '주문수', color: '#F59E0B' },
-            ]}
-          />
-        )}
-      </div>
-      
-      {/* Day of Week Analysis */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <h2 className="text-lg font-semibold mb-4">요일별 평균 매출</h2>
-        <BarChart
-          data={safeData(formatDayOfWeekData())}
-          xDataKey="day"
-          barDataKey="sales"
-          barName="평균 매출액"
-          layout="horizontal"
+    <div>
+      {/* 기존 페이지 컨텐츠 */}
+      <div className="relative">
+        {/* Coming Soon 오버레이 */}
+        <ComingSoonOverlay 
+          title="매출 분석 페이지"
+          subtitle="상세한 매출 분석과 트렌드를 제공하는 페이지를 준비 중입니다"
+          iconType="clock"
+          sidebarWidth={sidebarExpanded ? "200px" : "80px"}
         />
-      </div>
-      
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Product Sales Chart */}
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">상품별 매출</h2>
-          {productSales.length > 0 && (
+
+        <div className="px-4 py-6">
+          <h1 className="text-2xl font-bold mb-6">매출 분석</h1>
+          
+          {/* Daily Sales Trend */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <h2 className="text-lg font-semibold mb-4">일별 매출 추이</h2>
+            {dailySales.length > 0 && (
+              <LineChart
+                data={safeData(dailySales).map(item => ({
+                  date: item.date, // 'date' 필드를 'sales_date' 대신 사용
+                  매출: item.total_sales,
+                  주문수: item.transaction_count, // 'transaction_count' 필드를 'order_count' 대신 사용
+                }))}
+                xDataKey="date"
+                lines={[
+                  { dataKey: '매출', name: '매출액' },
+                  { dataKey: '주문수', name: '주문수', color: '#F59E0B' },
+                ]}
+              />
+            )}
+          </div>
+          
+          {/* Day of Week Analysis */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <h2 className="text-lg font-semibold mb-4">요일별 평균 매출</h2>
             <BarChart
-              data={safeData(productSales).map(item => ({
-                product: item.product_name,
-                sales: item.total_sales,
-              }))}
-              xDataKey="product"
+              data={safeData(formatDayOfWeekData())}
+              xDataKey="day"
               barDataKey="sales"
-              barName="매출액"
-              layout="vertical"
+              barName="평균 매출액"
+              layout="horizontal"
             />
-          )}
-        </div>
-        
-        {/* Payment Type Chart */}
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">결제 방식별 매출</h2>
-          {paymentTypes.length > 0 && (
-            <PieChart
-              data={safeData(paymentTypes).map(item => ({
-                name: item.payment_type || '미분류',
-                value: item.total_sales,
-              }))}
-              dataKey="value"
-              nameKey="name"
+          </div>
+          
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Product Sales Chart */}
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">상품별 매출</h2>
+              {productSales.length > 0 && (
+                <BarChart
+                  data={safeData(productSales).map(item => ({
+                    product: item.product_name,
+                    sales: item.total_sales,
+                  }))}
+                  xDataKey="product"
+                  barDataKey="sales"
+                  barName="매출액"
+                  layout="vertical"
+                />
+              )}
+            </div>
+            
+            {/* Payment Type Chart */}
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">결제 방식별 매출</h2>
+              {paymentTypes.length > 0 && (
+                <PieChart
+                  data={safeData(paymentTypes).map(item => ({
+                    name: item.payment_type || '미분류',
+                    value: item.total_sales,
+                  }))}
+                  dataKey="value"
+                  nameKey="name"
+                />
+              )}
+            </div>
+          </div>
+          
+          {/* Hourly Heatmap */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">시간대별/요일별 매출 히트맵</h2>
+            <HeatMap
+              data={safeData(prepareHourlyHeatMapData())}
+              xAxis={{ key: 'hour', name: '시간대' }}
+              yAxis={{ key: 'day', name: '요일' }}
+              valueKey="value"
+              formatter={formatCurrency}
             />
-          )}
+            <div className="mt-2 text-sm text-gray-500 text-center">
+              <p>시간대별 매출 강도를 표시하며, 색상이 짙을수록 매출이 높은 시간대입니다.</p>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      {/* Hourly Heatmap */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-lg font-semibold mb-4">시간대별/요일별 매출 히트맵</h2>
-        <HeatMap
-          data={safeData(prepareHourlyHeatMapData())}
-          xAxis={{ key: 'hour', name: '시간대' }}
-          yAxis={{ key: 'day', name: '요일' }}
-          valueKey="value"
-          formatter={formatCurrency}
-        />
-        <div className="mt-2 text-sm text-gray-500 text-center">
-          <p>시간대별 매출 강도를 표시하며, 색상이 짙을수록 매출이 높은 시간대입니다.</p>
-        </div>
-      </div>
+      </div> {/* relative 컨테이너 닫는 태그 */}
     </div>
   );
 };
