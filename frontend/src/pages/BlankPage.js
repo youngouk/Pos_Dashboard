@@ -13,6 +13,9 @@ import ReviewAnalysisSection from '../components/dashboard/ReviewAnalysisSection
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
+// API URL 설정
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const StoreStatusAnalysisPage = () => {
   const { filters, updateFilters, stores, fetchApiData, setError } = useDashboard();
   const [markdownText, setMarkdownText] = useState('');
@@ -74,7 +77,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved performance summary on mount
   useEffect(() => {
-    fetch('/api/summary/performance_summary')
+    fetch(`${API_URL}/api/summary/performance_summary')
       .then(res => {
         if (!res.ok) throw new Error('Not found');
         return res.text();
@@ -91,7 +94,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved monthly summary from server on mount
   useEffect(() => {
-    fetch('/api/summary/monthly_summary')
+    fetch(`${API_URL}/api/summary/monthly_summary')
       .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
       .then(text => {
         setMonthlySavedText(text);
@@ -105,7 +108,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved weekly summary on mount
   useEffect(() => {
-    fetch('/api/summary/weekday_summary')
+    fetch(`${API_URL}/api/summary/weekday_summary')
       .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
       .then(text => {
         setWeeklySavedText(text);
@@ -121,7 +124,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved analysis summary on mount
   useEffect(() => {
-    fetch('/api/summary/analysis_summary')
+    fetch(`${API_URL}/api/summary/analysis_summary')
       .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
       .then(text => {
         setAnalysisSavedText(text);
@@ -135,7 +138,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved product analysis summary on mount
   useEffect(() => {
-    fetch('/api/summary/product_analysis_summary')
+    fetch(`${API_URL}/api/summary/product_analysis_summary')
       .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
       .then(text => {
         setProductAnalysisSavedText(text);
@@ -149,7 +152,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Load saved time analysis summary on mount
   useEffect(() => {
-    fetch('/api/summary/time_analysis_summary')
+    fetch(`${API_URL}/api/summary/time_analysis_summary')
       .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
       .then(text => {
         setTimeAnalysisSavedText(text);
@@ -166,7 +169,7 @@ const StoreStatusAnalysisPage = () => {
   };
 
   const handleMonthlySave = () => {
-    fetch('/api/summary/monthly_summary', {
+    fetch(`${API_URL}/api/summary/monthly_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: monthlyMarkdownText }),
@@ -180,7 +183,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Save weekly summary
   const handleWeeklySave = () => {
-    fetch('/api/summary/weekday_summary', {
+    fetch(`${API_URL}/api/summary/weekday_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: weeklyMarkdownText }),
@@ -193,7 +196,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Save analysis summary
   const handleAnalysisSave = () => {
-    fetch('/api/summary/analysis_summary', {
+    fetch(`${API_URL}/api/summary/analysis_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: analysisMarkdownText }),
@@ -213,7 +216,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Save product analysis summary
   const handleProductAnalysisSave = () => {
-    fetch('/api/summary/product_analysis_summary', {
+    fetch(`${API_URL}/api/summary/product_analysis_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify({ content: productAnalysisMarkdownText }),
@@ -233,7 +236,7 @@ const StoreStatusAnalysisPage = () => {
 
   // Save time analysis summary
   const handleTimeAnalysisSave = () => {
-    fetch('/api/summary/time_analysis_summary', {
+    fetch(`${API_URL}/api/summary/time_analysis_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: timeAnalysisMarkdownText }),
@@ -686,7 +689,7 @@ const StoreStatusAnalysisPage = () => {
       };
 
       // AI 분석 API 호출
-      const response = await fetch('/api/ai/analyze-chart', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-chart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -771,7 +774,7 @@ const StoreStatusAnalysisPage = () => {
       };
 
       // API 호출
-      const response = await fetch('/api/ai/analyze-chart', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-chart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -872,7 +875,7 @@ const StoreStatusAnalysisPage = () => {
       };
 
       // API 호출
-      const response = await fetch('/api/ai/analyze-chart', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-chart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -993,7 +996,7 @@ const StoreStatusAnalysisPage = () => {
       };
 
       // 페이지 전체 분석 API 호출
-      const response = await fetch('/api/ai/analyze-page', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-page', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1068,7 +1071,7 @@ const StoreStatusAnalysisPage = () => {
 
   // 기존 handleSave 함수를 수정하여 편집 모드 해제
   const handleSave = () => {
-    fetch('/api/summary/performance_summary', {
+    fetch(`${API_URL}/api/summary/performance_summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: markdownText }),

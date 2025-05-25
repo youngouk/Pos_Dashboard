@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+
+// API URL 설정
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 // 페이지 분석 결과 캐시
 const pageAnalysisCache = {};
@@ -20,10 +23,15 @@ export const usePageAnalysis = () => {
     }
 
     try {
-      const response = await fetch('/api/ai/analyze-page', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-page`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page_data: pageData, context })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          page_data: pageData,
+          context: context
+        })
       });
       if (!response.ok) {
         const err = await response.text();

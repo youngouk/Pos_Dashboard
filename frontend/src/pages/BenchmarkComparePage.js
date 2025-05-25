@@ -20,6 +20,14 @@ import { BarChart as ReBarChart, Bar, LabelList } from 'recharts';
  * - 하위 25%: "하위25%"
  * 본 페이지는 BlankPage 로직을 최대 재활용해, 선택 매장 vs 벤치마크 매장을 동일 레이아웃에서 보여준다.
  */
+
+// 상위/하위 상수
+const BENCHMARK_TOP = 'top';
+const BENCHMARK_BOTTOM = 'bottom';
+
+// API URL 설정
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const BenchmarkComparePage = () => {
   const { filters, updateFilters, stores, fetchApiData, setError } = useDashboard();
   const componentRef = useRef(null);
@@ -33,8 +41,6 @@ const BenchmarkComparePage = () => {
   };
 
   /* ----------------------------- 벤치마크 타입 ----------------------------- */
-  const BENCHMARK_TOP = 'top25';
-  const BENCHMARK_BOTTOM = 'bottom25';
   const [benchmarkType, setBenchmarkType] = useState(BENCHMARK_TOP);
   // DB 요청에는 실제 매장명 사용, UI에는 알리아스(label) 사용
   const fetchBenchmarkName = benchmarkType === BENCHMARK_TOP ? '명동점' : '몽핀점';
@@ -50,7 +56,7 @@ const BenchmarkComparePage = () => {
 
   // Load saved benchmark summary on mount
   useEffect(() => {
-    fetch('/api/summary/benchmark_summary')
+    fetch(`${API_URL}/api/summary/benchmark_summary`)
       .then(res => {
         if (!res.ok) throw new Error('Not found');
         return res.text();
@@ -333,7 +339,7 @@ const BenchmarkComparePage = () => {
       };
 
       // 벤치마크 비교 종합 분석 API 호출
-      const response = await fetch('/api/ai/analyze-page', {
+      const response = await fetch(`${API_URL}/api/ai/analyze-page`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -415,7 +421,7 @@ const BenchmarkComparePage = () => {
 
   // 벤치마크 분석 결과 저장 함수
   const handleBenchmarkSummarySave = () => {
-    fetch('/api/summary/benchmark_summary', {
+    fetch(`${API_URL}/api/summary/benchmark_summary`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: benchmarkSummaryText }),
