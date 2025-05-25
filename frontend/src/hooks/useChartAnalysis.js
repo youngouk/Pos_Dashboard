@@ -6,9 +6,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 // 분석 결과 캐시
 const analysisCache = {};
 
-// 차트 유형별 분석 템플릿 정의
-const CHART_ANALYSIS_TEMPLATES = {
-
 export const useChartAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
