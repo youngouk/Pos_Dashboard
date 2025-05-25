@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiCheckCircle } from 'react-icons/fi';
 
+const storeDisplayNames = {
+  "석촌점": "A지점",
+  "명동점": "B지점",
+  "몽핀점": "C지점"
+};
+
 const StoreSelector = ({ stores = [], selectedStore, onChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -28,7 +34,7 @@ const StoreSelector = ({ stores = [], selectedStore, onChange, className = '' })
   
   const getDisplayName = () => {
     // selectedStore가 있으면 그것을 표시, 없으면 기본 텍스트
-    return selectedStore || '매장 선택';
+    return selectedStore ? (storeDisplayNames[selectedStore] || selectedStore) : '매장 선택';
   };
   
   return (
@@ -62,7 +68,7 @@ const StoreSelector = ({ stores = [], selectedStore, onChange, className = '' })
                     readOnly
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="ml-2">{store}</span>
+                  <span className="ml-2">{storeDisplayNames[store] || store}</span>
                 </div>
                 {selectedStore === store && <FiCheckCircle className="text-blue-500" />}
               </li>
