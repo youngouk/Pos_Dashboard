@@ -55,24 +55,38 @@ const StoreSelector = ({ stores = [], selectedStore, onChange, className = '' })
       {isOpen && (
         <div className="absolute right-0 z-50 w-48 mt-2 bg-white shadow-lg rounded-lg border border-gray-100 max-h-64 overflow-y-auto">
           <ul className="py-1">
-            {Array.isArray(stores) && stores.map((store) => (
-              <li
-                key={store}
-                className={`px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm flex items-center justify-between ${selectedStore === store ? 'bg-blue-50 text-blue-700' : ''}`}
-                onClick={() => handleStoreChange(store)}
-              >
-                <div className="flex items-center">
-                  <input 
-                    type="radio"
-                    checked={selectedStore === store}
-                    readOnly
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2">{storeDisplayNames[store] || store}</span>
-                </div>
-                {selectedStore === store && <FiCheckCircle className="text-blue-500" />}
-              </li>
-            ))}
+            {Array.isArray(stores) && stores.map((store) => {
+              // "석촌점"(A지점)만 선택 가능, 나머지는 비활성화
+              const isDisabled = store !== '석촌점';
+
+              return (
+                <li
+                  key={store}
+                  className={`px-4 py-2 text-sm flex items-center justify-between 
+                    ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'}
+                    ${selectedStore === store ? 'bg-blue-50 text-blue-700' : ''}`}
+                  onClick={() => {
+                    // 비활성 항목은 클릭 무시
+                    if (isDisabled) return;
+                    handleStoreChange(store);
+                  }}
+                >
+                  <div className="flex items-center">
+                    <input 
+                      type="radio"
+                      checked={selectedStore === store}
+                      readOnly
+                      disabled={isDisabled}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" 
+                    />
+                    <span className="ml-2">{storeDisplayNames[store] || store}</span>
+                  </div>
+                  {selectedStore === store && !isDisabled && (
+                    <FiCheckCircle className="text-blue-500" />
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

@@ -16,6 +16,13 @@ import { BarChart as ReBarChart, Bar, LabelList } from 'recharts';
 import CacheClearButton from '../components/common/CacheClearButton';
 import LoadingPopup from '../components/common/LoadingPopup';
 
+// 매장명 표시용 매핑
+const storeDisplayNames = {
+  "석촌점": "A지점",
+  "명동점": "B지점", 
+  "몽핀점": "C지점"
+};
+
 /**
  * 매장비교 페이지 (벤치마크 상/하위 25% 매장과 비교)
  * - 상위 25%: "상위25%"
@@ -44,6 +51,10 @@ const BenchmarkComparePage = () => {
 
   /* ----------------------------- 벤치마크 타입 ----------------------------- */
   const [benchmarkType, setBenchmarkType] = useState(BENCHMARK_TOP);
+  
+  // 사용자 탐색 유도를 위한 상태
+  const [hasViewedBoth, setHasViewedBoth] = useState(false);
+  const [viewedTypes, setViewedTypes] = useState(new Set([BENCHMARK_TOP])); // 초기 선택값 포함
   // DB 요청에는 실제 매장명 사용, UI에는 알리아스(label) 사용
   const fetchBenchmarkName = benchmarkType === BENCHMARK_TOP ? '명동점' : '몽핀점';
   const benchmarkLabel = benchmarkType === BENCHMARK_TOP ? '상위25%' : '하위25%';
@@ -503,10 +514,116 @@ const BenchmarkComparePage = () => {
   // 벤치마크 분석 접어두기 상태 추가
   const [benchmarkSummaryExpanded, setBenchmarkSummaryExpanded] = useState(false);
 
+  /* ---------------------------------------------------------------------- */
+  /* BenchmarkComparePage 전용 기본 필터 설정
+     - 목적: 페이지가 처음 로드되거나 매장 목록(stores) 정보가 갱신될 때
+       기본 분석 기간(2025-02-01 ~ 2025-02-28)과 기본 매장(석촌점)을 강제로 적용해
+       사용자가 다른 페이지에서 이동해 올 때 필터가 초기화되지 않는 문제 방지
+     - BlankPage.js 의 동일 로직을 재사용하되, 필요 변수명만 맞춰 조정
+  ---------------------------------------------------------------------- */
+  useEffect(() => {
+    // 매장 목록이 아직 준비되지 않았다면 대기
+    if (!stores || stores.length === 0) return;
+
+    const defaultDateRange = { startDate: '2025-02-01', endDate: '2025-02-28' };
+    const defaultStore = '석촌점';
+
+    // 석촌점이 실제 매장 목록에 존재할 때만 적용 (없으면 첫 번째 실매장 사용)
+    const isStoreAvailable = stores.includes(defaultStore);
+    const fallbackStore = stores.find((s) => s !== '전체') || defaultStore;
+
+    const finalStore = isStoreAvailable ? defaultStore : fallbackStore;
+
+    const needsUpdate =
+      filters.dateRange.startDate !== defaultDateRange.startDate ||
+      filters.dateRange.endDate !== defaultDateRange.endDate ||
+      filters.selectedStore !== finalStore;
+
+    if (needsUpdate) {
+      updateFilters({
+        dateRange: defaultDateRange,
+        selectedStore: finalStore,
+      });
+    }
+  }, [stores]);
+
   /* ------------------------------- 렌더링 ------------------------------- */
   return (
     <div ref={componentRef} className="px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">타 매장 비교 분석</h1>
+      {/* 페이지 제목 */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">타 매장 비교 분석</h1>
+      </div>
+
+      {/* 벤치마크 선택 섹션 - 더 눈에 띄게 배치 */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">비교 기준 선택</h2>
+          
+          {/* 탭 스타일의 버튼 그룹 */}
+          <div className="bg-white rounded-lg p-1 shadow-sm">
+            <button
+              className={`px-4 py-2 rounded-md text-sm font-medium relative ${
+                benchmarkType === BENCHMARK_TOP
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              onClick={() => {
+                setBenchmarkType(BENCHMARK_TOP);
+                const newViewedTypes = new Set(viewedTypes);
+                newViewedTypes.add(BENCHMARK_TOP);
+                setViewedTypes(newViewedTypes);
+                if (newViewedTypes.size === 2) setHasViewedBoth(true);
+              }}
+            >
+              <div className="flex items-center space-x-1.5">
+                <span>📈</span>
+                <span>상위 25%</span>
+              </div>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-md text-sm font-medium relative ${
+                benchmarkType === BENCHMARK_BOTTOM
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              onClick={() => {
+                setBenchmarkType(BENCHMARK_BOTTOM);
+                const newViewedTypes = new Set(viewedTypes);
+                newViewedTypes.add(BENCHMARK_BOTTOM);
+                setViewedTypes(newViewedTypes);
+                if (newViewedTypes.size === 2) setHasViewedBoth(true);
+              }}
+            >
+              <div className="flex items-center space-x-1.5">
+                <span>📉</span>
+                <span>하위 25%</span>
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        {/* 현재 선택된 비교 기준 설명 */}
+        <div className="p-3 bg-white/80 rounded-lg">
+          <div className="flex items-center space-x-2 text-sm text-gray-700">
+            <span>
+              {benchmarkType === BENCHMARK_TOP ? '📈' : '📉'}
+            </span>
+            <span>
+              {benchmarkType === BENCHMARK_TOP ? (
+                <span>
+                  <strong>상위 25% 매장</strong>과 비교하여 성장 방향을 찾아보세요
+                </span>
+              ) : (
+                <span>
+                  <strong>하위 25% 매장</strong>과 비교하여 현재 우위점을 확인해보세요
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+
 
       {/* 벤치마크 비교 종합 요약 - 개선된 UI */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
@@ -567,7 +684,7 @@ const BenchmarkComparePage = () => {
         </div>
         
         <div className="text-sm text-gray-600 mb-4">
-          <p>선택 매장({targetStore})과 {benchmarkLabel} 매장의 모든 비교 데이터를 종합하여 벤치마킹 인사이트를 제공합니다.</p>
+          <p>선택 매장({storeDisplayNames[targetStore] || targetStore})과 {benchmarkLabel} 매장의 모든 비교 데이터를 종합하여 벤치마킹 인사이트를 제공합니다.</p>
         </div>
 
         {/* 분석 로딩 상태 */}
@@ -702,30 +819,6 @@ const BenchmarkComparePage = () => {
         )}
       </div>
 
-      {/* 벤치마크 선택 탭 */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6 flex space-x-4">
-        <button
-          className={`px-4 py-2 rounded-lg text-sm ${
-            benchmarkType === BENCHMARK_TOP
-              ? 'bg-brand-primary text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          onClick={() => setBenchmarkType(BENCHMARK_TOP)}
-        >
-          상위 25% 매장과 비교
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg text-sm ${
-            benchmarkType === BENCHMARK_BOTTOM
-              ? 'bg-brand-primary text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          onClick={() => setBenchmarkType(BENCHMARK_BOTTOM)}
-        >
-          하위 25% 매장과 비교
-        </button>
-      </div>
-
       {/* 월간 KPI 카드 */}
       <div className="bg-white p-6 rounded-lg shadow mb-8">
         <h2 className="text-xl font-bold mb-6 text-center">월간 주요지표 비교</h2>
@@ -733,7 +826,7 @@ const BenchmarkComparePage = () => {
         {/* 테이블 헤더 */}
         <div className="grid gap-4 mb-4 pb-3 border-b border-gray-200" style={{ gridTemplateColumns: '120px 1fr 1fr 2fr' }}>
           <div className="text-lg font-bold text-gray-700 flex items-center justify-center">지표</div>
-          <div className="text-lg font-bold text-gray-700 flex items-center justify-center">{targetStore}</div>
+          <div className="text-lg font-bold text-gray-700 flex items-center justify-center">{storeDisplayNames[targetStore] || targetStore}</div>
           <div className="text-lg font-bold text-gray-700 flex items-center justify-center">{benchmarkLabel}</div>
           <div className="text-lg font-bold text-gray-700 flex items-center justify-center">차이</div>
         </div>
@@ -837,7 +930,7 @@ const BenchmarkComparePage = () => {
           })}
           xDataKey="date"
           lines={[
-            { dataKey: targetStore, name: targetStore, color: 'rgb(48, 127, 226)' }, // CWDF BLUE
+            { dataKey: targetStore, name: storeDisplayNames[targetStore] || targetStore, color: 'rgb(48, 127, 226)' }, // CWDF BLUE
             ...(benchmarkType === BENCHMARK_TOP 
               ? [{ dataKey: '상위25%', name: '상위25%', color: 'rgb(20, 160, 166)' }] // CWDF EMERALD
               : [{ dataKey: '하위25%', name: '하위25%', color: 'rgb(255, 120, 101)' }] // CWDF ORANGE
@@ -866,7 +959,7 @@ const BenchmarkComparePage = () => {
           })}
           xDataKey="date"
           lines={[
-            { dataKey: targetStore, name: targetStore, color: 'rgb(48, 127, 226)' }, // CWDF BLUE
+            { dataKey: targetStore, name: storeDisplayNames[targetStore] || targetStore, color: 'rgb(48, 127, 226)' }, // CWDF BLUE
             ...(benchmarkType === BENCHMARK_TOP 
               ? [{ dataKey: '상위25%', name: '상위25%', color: 'rgb(20, 160, 166)' }] // CWDF EMERALD
               : [{ dataKey: '하위25%', name: '하위25%', color: 'rgb(255, 120, 101)' }] // CWDF ORANGE
@@ -878,7 +971,7 @@ const BenchmarkComparePage = () => {
       {/* 상품별 매출 비교 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-md font-medium mb-2">{targetStore} 상품별 매출</h3>
+          <h3 className="text-md font-medium mb-2">{storeDisplayNames[targetStore] || targetStore} 상품별 매출</h3>
           <div className="relative">
             <ResponsiveContainer width="100%" height={450}>
               <PieChart>
@@ -919,7 +1012,7 @@ const BenchmarkComparePage = () => {
             {/* 중앙 텍스트 */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-800">{targetStore}</div>
+                <div className="text-2xl font-bold text-gray-800">{storeDisplayNames[targetStore] || targetStore}</div>
                 <div className="text-sm text-gray-600">매출 분석</div>
               </div>
             </div>
@@ -978,7 +1071,7 @@ const BenchmarkComparePage = () => {
       {/* 상품별 판매건수 비교 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-md font-medium mb-2">{targetStore} 상품별 판매건수</h3>
+          <h3 className="text-md font-medium mb-2">{storeDisplayNames[targetStore] || targetStore} 상품별 판매건수</h3>
           <div className="relative">
             <ResponsiveContainer width="100%" height={450}>
               <PieChart>
@@ -1019,7 +1112,7 @@ const BenchmarkComparePage = () => {
             {/* 중앙 텍스트 */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-800">{targetStore}</div>
+                <div className="text-2xl font-bold text-gray-800">{storeDisplayNames[targetStore] || targetStore}</div>
                 <div className="text-sm text-gray-600">판매건수 분석</div>
               </div>
             </div>
@@ -1098,7 +1191,7 @@ const BenchmarkComparePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* 선택 매장 ROI */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">{targetStore} ROI 지표</h3>
+            <h3 className="text-lg font-semibold mb-4">{storeDisplayNames[targetStore] || targetStore} ROI 지표</h3>
             <div className="grid grid-cols-1 gap-4">
               <div style={{ backgroundColor: 'rgb(179, 221, 249)' }} className="p-4 rounded-lg flex items-center space-x-4"> {/* CWDF BLUE SOFT */}
                 <svg viewBox="0 0 24 24" fill="none" stroke="rgb(48, 127, 226)" className="w-8 h-8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> {/* CWDF BLUE */}
@@ -1181,7 +1274,7 @@ const BenchmarkComparePage = () => {
             <tbody>
               {/* 선택 매장 행 */}
               <tr className="border-b border-gray-100">
-                <td className="px-4 py-3 font-medium" style={{ color: 'rgb(48, 127, 226)' }}>{targetStore}</td> {/* CWDF BLUE */}
+                <td className="px-4 py-3 font-medium" style={{ color: 'rgb(48, 127, 226)' }}>{storeDisplayNames[targetStore] || targetStore}</td> {/* CWDF BLUE */}
                 <td className="px-4 py-3">{storeMetrics.totalSales.toLocaleString()}원</td>
                 <td className="px-4 py-3">22평</td>
                 <td className="px-4 py-3">4명</td>
