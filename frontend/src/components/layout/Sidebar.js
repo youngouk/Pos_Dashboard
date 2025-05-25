@@ -24,11 +24,11 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/blank', label: '매장 현황분석', icon: <FiPieChart size={22} /> },
     { path: '/benchmark', label: '매장 비교분석', icon: <FiGitMerge size={22} /> },
-    { path: '/', label: '대시보드', icon: <FiGrid size={22} /> },
+    { path: '/dashboard', label: '대시보드', icon: <FiGrid size={22} /> },
     { path: '/sales', label: '매출 분석', icon: <FiFile size={22} /> },
-    { path: '/analytics', label: '고급 분석', icon: <FiBarChart2 size={22} /> },
+   // { path: '/analytics', label: '고급 분석', icon: <FiBarChart2 size={22} /> },
     { path: '/trends', label: '트렌드', icon: <FiTrendingUp size={22} /> },
-    { path: '/compare', label: '매장 비교', icon: <FiUsers size={22} /> },
+   // { path: '/compare', label: '매장 비교', icon: <FiUsers size={22} /> },
     { path: '/notice', label: '공지사항', icon: <FiFileText size={22} /> },
   ];
 

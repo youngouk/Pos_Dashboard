@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDashboard } from '../contexts/DashboardContext';
 import { salesService } from '../services/api';
 import KpiCard from '../components/dashboard/KPICard';
@@ -10,8 +10,10 @@ import StoreSelector from '../components/common/StoreSelector';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import ReviewAnalysisSection from '../components/dashboard/ReviewAnalysisSection';
+import DeltaBadge from '../components/common/DeltaBadge';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import CacheClearButton from '../components/common/CacheClearButton';
 
 // API URL 설정
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -2105,6 +2107,7 @@ const StoreStatusAnalysisPage = () => {
 
         <ReviewAnalysisSection onExportPdf={handleExportPdf} />
       </div>
+      <CacheClearButton />
     </>
   );
 };

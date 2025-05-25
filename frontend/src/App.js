@@ -18,7 +18,8 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/" element={<StoreStatusAnalysisPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/sales" element={<SalesPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/trends" element={<TrendsPage />} />

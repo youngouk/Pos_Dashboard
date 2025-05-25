@@ -187,35 +187,7 @@ const DashboardPage = () => {
     // KPI는 그대로 사용 (전체 매장 요약 데이터)
     setKpiData(kpi);
   }, [selectedStores]);
-  
-  // 디버깅용 - 캐시 초기화 및 새로고침 기능
-  const clearCacheAndReload = () => {
-    try {
-      // 세션 스토리지 캐시 초기화
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('dashboard_data_')) {
-          sessionStorage.removeItem(key);
-          console.log('캐시 항목 삭제:', key);
-        }
-      });
-      
-      // DashboardContext의 캐시 초기화 함수 호출
-      if (typeof invalidateCache === 'function') {
-        invalidateCache('sales');
-        invalidateCache('kpi');
-        console.log('API 캐시 무효화 완료: sales, kpi');
-      }
-      
-      alert('캐시가 초기화되었습니다. 페이지를 새로고침합니다.');
-      
-      // 페이지 새로고침
-      window.location.reload();
-    } catch (e) {
-      console.error('캐시 초기화 중 오류:', e);
-      alert('캐시 초기화 중 오류가 발생했습니다: ' + e.message);
-    }
-  };
-  
+
   // 매장 선택 처리 - 클라이언트 측 필터링만 수행하도록 개선
   const handleStoreSelection = (store) => {
     console.log('매장 선택 처리:', store);
@@ -1209,116 +1181,9 @@ const DashboardPage = () => {
   return (
     <div>
       {/* Store Selection - Dropdown Version */}
-      <div className="bg-white rounded-panze shadow-panze p-5 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-panze-dark">매장 선택</h2>
-          {/* 디버깅용 캐시 초기화 버튼 추가 */}
-          <button 
-            onClick={clearCacheAndReload}
-            className="px-3 py-1 bg-gray-100 text-gray-600 rounded-md text-sm hover:bg-gray-200 transition-colors"
-            title="캐시를 초기화하고 페이지를 새로고침합니다"
-          >
-            캐시 초기화
-          </button>
+          <div></div>
         </div>
-        
-        {/* 새로운 드롭다운 매장 선택기 */}
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* 현재 선택된 매장 표시 */}
-          <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-md flex items-center">
-            <span className="font-semibold mr-2">현재 선택:</span>
-            <span className="bg-white px-3 py-1 rounded border border-blue-200">
-              {showAllStores ? '전체 매장' : selectedStores.join(', ')}
-            </span>
-          </div>
-          
-          {/* 드롭다운 컨테이너 */}
-          <div className="relative inline-block w-full md:w-auto">
-            <button 
-              data-dropdown-toggle="store-dropdown"
-              onClick={() => document.getElementById('store-dropdown').classList.toggle('hidden')}
-              className="w-full md:w-auto flex items-center justify-between bg-white border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <span>매장 선택하기</span>
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            
-            {/* 드롭다운 메뉴 */}
-            <div 
-              id="store-dropdown" 
-              className="hidden absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md overflow-hidden border border-gray-200"
-              style={{minWidth: '200px'}}
-            >
-              {/* 전체 매장 옵션 */}
-              <div 
-                className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${showAllStores ? 'bg-blue-50 text-blue-700' : ''}`}
-                onClick={() => {
-                  handleStoreSelection('all');
-                  document.getElementById('store-dropdown').classList.add('hidden');
-                }}
-              >
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    checked={showAllStores}
-                    onChange={() => {}}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label className="ml-2 text-sm font-medium">전체 매장</label>
-                </div>
-              </div>
-              
-              <div className="h-px bg-gray-200"></div>
-              
-              {/* 개별 매장 목록 */}
-              <div className="max-h-60 overflow-y-auto py-1">
-                {filters.stores.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-gray-500">매장 데이터를 불러오는 중...</div>
-                ) : (
-                  filters.stores
-                    .filter(store => store.id !== 'all')
-                    .map(store => (
-                      <div 
-                        key={store.id || store.name}
-                        className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-                          !showAllStores && selectedStores.includes(store.name) ? 'bg-blue-50 text-blue-700' : ''
-                        }`}
-                        onClick={() => {
-                          handleStoreSelection(store.name);
-                          // 모바일에서는 선택 후 드롭다운 닫기
-                          if (window.innerWidth < 768) {
-                            document.getElementById('store-dropdown').classList.add('hidden');
-                          }
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            checked={!showAllStores && selectedStores.includes(store.name)}
-                            onChange={() => {}}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label className="ml-2 text-sm font-medium">{store.name}</label>
-                        </div>
-                      </div>
-                    ))
-                )}
-              </div>
-              
-              {/* 닫기 버튼 */}
-              <div className="h-px bg-gray-200"></div>
-              <div 
-                className="px-4 py-2 text-sm text-center text-gray-700 bg-gray-50 hover:bg-gray-100 cursor-pointer"
-                onClick={() => document.getElementById('store-dropdown').classList.add('hidden')}
-              >
-                닫기
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       
       {/* 전체 페이지 AI 분석 위젯 추가 */}
       <PageAnalysisWidget
@@ -1354,14 +1219,6 @@ const DashboardPage = () => {
             previousValue={kpiData.previous_total_customers}
             formatter={(val) => (typeof val === 'number' ? val.toLocaleString() + '명' : '-')}
             icon={<FiUsers size={18} />}
-          />
-          
-          <KPICard
-            title="평균 객단가"
-            value={typeof kpiData.average_ticket === 'number' ? kpiData.average_ticket : 0}
-            previousValue={kpiData.previous_average_ticket}
-            formatter={formatCurrency}
-            icon={<FiShoppingCart size={18} />}
           />
           
           <KPICard

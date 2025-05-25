@@ -13,6 +13,7 @@ import DeltaBadge from '../components/common/DeltaBadge';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { BarChart as ReBarChart, Bar, LabelList } from 'recharts';
+import CacheClearButton from '../components/common/CacheClearButton';
 
 /**
  * 매장비교 페이지 (벤치마크 상/하위 25% 매장과 비교)
@@ -1195,6 +1196,7 @@ const BenchmarkComparePage = () => {
           PDF로 추출
         </button>
       </div>
+      <CacheClearButton />
     </div>
   );
 };
