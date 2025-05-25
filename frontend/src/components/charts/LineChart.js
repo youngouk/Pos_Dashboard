@@ -292,13 +292,45 @@ const LineChart = ({
             y={ref.value}
             stroke={ref.stroke || '#000'}
             strokeDasharray={ref.strokeDasharray || '3 3'}
-            label={ref.label ? { 
-              position: 'topRight', 
-              value: ref.label, 
-              fill: ref.stroke || '#000', 
-              fontSize: 12, 
-              fontWeight: 'bold' 
-            } : undefined}
+            label={ref.label ? (props => {
+              const { viewBox } = props;
+              const x = (viewBox && viewBox.x) || 0;
+              const y = (viewBox && viewBox.y) || 0;
+              const width = 140;
+              const height = 20;
+              // labelPosition: 'top' | 'bottom' 지원 (기본값: center on line)
+              let labelY;
+              if (ref.labelPosition === 'bottom') {
+                labelY = y + 2;
+              } else if (ref.labelPosition === 'top') {
+                labelY = y - height - 2;
+              } else {
+                labelY = y - height / 2;
+              }
+              // 그래프 가운데 정렬: x + (viewBox.width/2) - (width/2)
+              const centerX = (viewBox && viewBox.width) ? (x + viewBox.width / 2 - width / 2) : (x - width / 2);
+              return (
+                <foreignObject x={centerX} y={labelY} width={width} height={height} style={{ pointerEvents: 'none' }}>
+                                        <div style={{
+                        background: 'rgba(255,255,255,0.65)',
+                        color: ref.stroke || '#000',
+                        padding: '1px 3px',
+                        borderRadius: '8px',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                        whiteSpace: 'nowrap',
+                      }}>
+                    {ref.label}
+                  </div>
+                </foreignObject>
+              );
+            }) : undefined}
           />
         ))}
       </RechartsLineChart>

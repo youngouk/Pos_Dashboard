@@ -19,7 +19,7 @@ import { useDashboard } from '../../contexts/DashboardContext';
 
 const Sidebar = () => {
   const location = useLocation();
-  const { sidebarExpanded, setSidebarExpanded } = useDashboard();
+  const { sidebarExpanded, setSidebarExpanded, changeUserView } = useDashboard();
   
   const menuItems = [
     { path: '/blank', label: '매장 현황분석', icon: <FiPieChart size={22} /> },
@@ -36,10 +36,15 @@ const Sidebar = () => {
     setSidebarExpanded(!sidebarExpanded);
   };
 
+  // 메뉴 클릭 시 userView를 본사로 변경하는 핸들러
+  const handleMenuClick = () => {
+    changeUserView('headquarters');
+  };
+
   return (
     <div className={`${sidebarExpanded ? 'w-[200px]' : 'w-[80px]'} bg-white flex-shrink-0 flex flex-col items-center py-6 shadow-md z-10 transition-all duration-300`}>
       <div className="mb-8 flex items-center justify-center">
-        <Link to="/" className="flex items-center justify-center">
+        <Link to="/" onClick={handleMenuClick} className="flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
@@ -70,6 +75,7 @@ const Sidebar = () => {
           <Link
             key={item.path}
             to={item.path}
+            onClick={handleMenuClick}
             className={`w-full p-3 rounded-lg transition-colors flex ${sidebarExpanded ? 'justify-start' : 'justify-center'} items-center ${
               location.pathname === item.path
                 ? 'bg-panze-dark text-white'

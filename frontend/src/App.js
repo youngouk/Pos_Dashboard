@@ -11,6 +11,7 @@ import ApiTestPage from './pages/ApiTestPage';
 import TrendsPage from './pages/TrendsPage';
 import StoreStatusAnalysisPage from './pages/BlankPage';
 import BenchmarkComparePage from './pages/BenchmarkComparePage';
+import SupervisorPage from './pages/SupervisorPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/trends" element={<TrendsPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/benchmark" element={<BenchmarkComparePage />} />
+            <Route path="/supervisor" element={<SupervisorPage />} />
             <Route path="/notice" element={<NoticePage />} />
             <Route path="/api-test" element={<ApiTestPage />} />
             <Route path="/blank" element={<StoreStatusAnalysisPage />} />

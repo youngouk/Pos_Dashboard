@@ -500,6 +500,8 @@ const BenchmarkComparePage = () => {
   const [benchmarkSummaryEditMode, setBenchmarkSummaryEditMode] = useState(false);
   const [benchmarkSummaryText, setBenchmarkSummaryText] = useState('');
   const [benchmarkSummaryPage, setBenchmarkSummaryPage] = useState(false);
+  // 벤치마크 분석 접어두기 상태 추가
+  const [benchmarkSummaryExpanded, setBenchmarkSummaryExpanded] = useState(false);
 
   /* ------------------------------- 렌더링 ------------------------------- */
   return (
@@ -623,9 +625,20 @@ const BenchmarkComparePage = () => {
                   remarkPlugins={[remarkBreaks]}
                   className="text-gray-700 leading-relaxed"
                 >
-                  {benchmarkSummaryPage}
+                  {benchmarkSummaryExpanded 
+                    ? benchmarkSummaryPage 
+                    : benchmarkSummaryPage.split('\n').slice(0, 10).join('\n') + (benchmarkSummaryPage.split('\n').length > 10 ? '\n...' : '')
+                  }
                 </ReactMarkdown>
               </div>
+              {benchmarkSummaryPage.split('\n').length > 10 && (
+                <button
+                  onClick={() => setBenchmarkSummaryExpanded(prev => !prev)}
+                  className="mt-3 mx-auto block px-4 py-2 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600 transition-colors"
+                >
+                  {benchmarkSummaryExpanded ? '접기' : '전체 분석 결과 보기'}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -645,9 +658,20 @@ const BenchmarkComparePage = () => {
                   remarkPlugins={[remarkBreaks]}
                   className="text-gray-700 leading-relaxed"
                 >
-                  {benchmarkSummaryResult}
+                  {benchmarkSummaryExpanded 
+                    ? benchmarkSummaryResult 
+                    : benchmarkSummaryResult.split('\n').slice(0, 15).join('\n') + (benchmarkSummaryResult.split('\n').length > 15 ? '\n...' : '')
+                  }
                 </ReactMarkdown>
               </div>
+              {benchmarkSummaryResult.split('\n').length > 15 && (
+                <button
+                  onClick={() => setBenchmarkSummaryExpanded(prev => !prev)}
+                  className="mt-3 mx-auto block px-4 py-2 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600 transition-colors"
+                >
+                  {benchmarkSummaryExpanded ? '접기' : '전체 분석 결과 보기'}
+                </button>
+              )}
             </div>
             <div className="flex justify-end space-x-2">
               <button

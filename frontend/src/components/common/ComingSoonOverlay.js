@@ -31,7 +31,23 @@ const ComingSoonOverlay = ({
   return (
     <div className={`
       fixed top-0 bottom-0 right-0 z-[9999]
-      bg-white bg-opacity-40 backdrop-blur-sm
+      bg-white bg-opacity-75 backdrop-blur-none
+      /*
+        블러 효과 및 투명도 설정 예시:
+        - backdrop-blur-none: 블러 없음
+        - backdrop-blur-sm: 약한 블러 (현재 적용)
+        - backdrop-blur: 기본 블러
+        - backdrop-blur-md: 중간 블러
+        - backdrop-blur-lg: 강한 블러
+        - backdrop-blur-xl: 매우 강한 블러
+
+        투명도 예시:
+        - bg-opacity-10: 10% 불투명 (90% 투명, 현재 적용)
+        - bg-opacity-30: 30% 불투명 (70% 투명)
+        - bg-opacity-50: 50% 불투명 (50% 투명)
+        - bg-opacity-80: 80% 불투명 (20% 투명)
+        - bg-opacity-100: 100% 불투명 (완전 불투명)
+      */
       flex items-center justify-center
       ${className}
     `} style={{ left: sidebarWidth }}>

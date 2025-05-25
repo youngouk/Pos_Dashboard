@@ -464,6 +464,12 @@ const StoreStatusAnalysisPage = () => {
 
   // aggregate metrics
   const totalMonthlySales = dailyData.reduce((sum, item) => sum + (item.total_sales || 0), 0);
+  console.log('🔍 totalMonthlySales 계산 디버깅:', {
+    dailyDataLength: dailyData.length,
+    dailyDataSample: dailyData.slice(0, 3),
+    totalMonthlySales: totalMonthlySales,
+    dailyDataTotalSalesValues: dailyData.map(item => item.total_sales)
+  });
   const totalMonthlyTransactions = dailyData.reduce((sum, item) => sum + (item.transaction_count || 0), 0);
   const avgList = dailyData.map(item => item.avg_transaction_value || 0);
   const filteredAvgList = dailyData
@@ -480,6 +486,13 @@ const StoreStatusAnalysisPage = () => {
 
   // monthly average values for day-of-week reference lines
   const monthlyAverageSales = dailyData.length ? totalMonthlySales / dailyData.length : 0;
+  console.log('🔍 monthlyAverageSales 디버깅:', {
+    dailyDataLength: dailyData.length,
+    totalMonthlySales: totalMonthlySales,
+    monthlyAverageSales: monthlyAverageSales,
+    roundedValue: Math.round(monthlyAverageSales),
+    formattedValue: Math.round(monthlyAverageSales).toLocaleString()
+  });
   const monthlyAverageTransactions = dailyData.length ? totalMonthlyTransactions / dailyData.length : 0;
   // monthly median values for day-of-week reference lines
   const monthlyMedianSales = useMemo(() => {
@@ -1499,7 +1512,7 @@ const StoreStatusAnalysisPage = () => {
                         : 'bg-blue-600 text-white hover:bg-blue-700 transition-colors'
                     }`}
                   >
-                    {aiAnalysisLoading ? '분석 중...' : '분석 시작'}
+                    {aiAnalysisLoading ? '분석 중...' : '매출 데이터 분석'}
                   </button>
                 )}
                 {(analysisSavedText || analysisEditMode) && (
@@ -1610,7 +1623,7 @@ const StoreStatusAnalysisPage = () => {
                         {isLong && (
                           <button
                             onClick={() => setAnalysisShowAll(prev => !prev)}
-                            className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition-colors"
+                            className="mt-3 mx-auto block px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition-colors"
                           >
                             {analysisShowAll ? '접기' : '전체 분석 결과 보기'}
                           </button>
@@ -1672,7 +1685,12 @@ const StoreStatusAnalysisPage = () => {
               <h4 className="text-md font-medium mb-2">상품별 매출</h4>
               <div style={{ height: '750px' }}>
               <BarChart
-                data={topSellingProducts.map(item => ({ product: item.product_name, 매출: item.total_sales, 개수: item.quantity }))}
+                data={topSellingProducts.map((item, idx) => ({
+                  product: item.product_name,
+                  매출: item.total_sales,
+                  개수: item.quantity,
+                  fill: `rgba(52, 152, 219, ${1 - (idx / (topSellingProducts.length - 1)) * 0.5})`
+                }))}
                 xDataKey="product"
                 barDataKey="매출"
                 barName="매출액"
@@ -1686,7 +1704,11 @@ const StoreStatusAnalysisPage = () => {
               <h4 className="text-md font-medium mb-2">상품별 판매 개수</h4>
               <div style={{ height: '750px' }}>
               <BarChart
-                data={topCountProducts.map(item => ({ product: item.product_name, 개수: item.quantity }))}
+                data={topCountProducts.map((item, idx) => ({
+                  product: item.product_name,
+                  개수: item.quantity,
+                  fill: `rgba(20, 160, 166, ${1 - (idx / (topCountProducts.length - 1)) * 0.5})`
+                }))}
                 xDataKey="product"
                 barDataKey="개수"
                 barName="판매 개수"
@@ -1702,7 +1724,7 @@ const StoreStatusAnalysisPage = () => {
             {/* 상품별 분석 컴포넌트 */}
             <div className="bg-white p-6 rounded-lg shadow mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold text-gray-800">🛍️ 상품별 판매 데이터 종합 분석</h4>
+                <h4 className="text-lg font-semibold text-gray-800">🏷️ 상품별 판매 데이터 종합 분석</h4>
                 {!productAnalysisSavedText && !productAnalysisEditMode && (
                   <button
                     onClick={handleProductAnalysis}
@@ -1716,6 +1738,49 @@ const StoreStatusAnalysisPage = () => {
                     {productAiAnalysisLoading ? '분석 중...' : '상품 데이터 분석'}
                   </button>
                 )}
+                {(productAnalysisSavedText || productAnalysisEditMode) && (
+                  <div className="flex space-x-2">
+                    {!productAnalysisEditMode && (
+                      <>
+                        <button
+                          onClick={handleProductAnalysisEdit}
+                          className="px-3 py-1 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                        >
+                          편집
+                        </button>
+                        <button
+                          onClick={() => setProductAnalysisSavedText('')}
+                          className="px-3 py-1 text-sm bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
+                        >
+                          새 분석
+                        </button>
+                      </>
+                    )}
+                    {productAnalysisEditMode && (
+                      <>
+                        <button
+                          onClick={handleProductAnalysisSave}
+                          className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setProductAnalysisEditMode(false);
+                            setProductAnalysisMarkdownText(productAnalysisSavedText);
+                          }}
+                          className="px-3 py-1 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                        >
+                          취소
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-600 mb-4">
+                <p>매출 상위 제품, 판매량 상위 제품, 가격대별 성과 등 상품 포트폴리오 전반을 분석하여 상품 전략 최적화 인사이트를 제공합니다.</p>
               </div>
 
               {/* 분석 로딩 상태 */}
@@ -1747,32 +1812,13 @@ const StoreStatusAnalysisPage = () => {
 
               {/* 분석 결과 편집 모드 */}
               {productAnalysisEditMode && (
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h5 className="text-md font-medium text-gray-700">분석 결과 편집</h5>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleProductAnalysisSave}
-                        className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 transition-colors"
-                      >
-                        저장
-                      </button>
-                      <button
-                        onClick={() => {
-                          setProductAnalysisEditMode(false);
-                          setProductAnalysisMarkdownText(productAnalysisSavedText);
-                        }}
-                        className="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600 transition-colors"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">상품별 분석 내용 편집</label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-md p-3 min-h-[200px] text-sm"
+                    className="w-full border border-gray-300 rounded-md p-3 min-h-[300px] text-sm"
                     value={productAnalysisMarkdownText}
                     onChange={e => setProductAnalysisMarkdownText(e.target.value)}
-                    placeholder="상품별 분석 결과를 편집하세요..."
+                    placeholder="상품별 분석 내용을 입력하거나 수정하세요..."
                   />
                 </div>
               )}
@@ -1780,33 +1826,24 @@ const StoreStatusAnalysisPage = () => {
               {/* 저장된 분석 결과 표시 */}
               {productAnalysisSavedText && !productAnalysisEditMode && (
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h5 className="text-md font-medium text-gray-700">저장된 상품 분석 결과</h5>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleProductAnalysisEdit}
-                        className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
-                      >
-                        편집
-                      </button>
-                      <button
-                        onClick={() => setProductAnalysisSavedText('')}
-                        className="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600 transition-colors"
-                      >
-                        다시 분석
-                      </button>
-                    </div>
-                  </div>
                   {(() => {
                     const lines = productAnalysisSavedText.split('\n');
-                    const isLong = lines.length > 10;
-                    const displayText = isLong && !productAnalysisShowAll ? lines.slice(0, 10).join('\n') + '...' : productAnalysisSavedText;
-                    
+                    const isLong = lines.length > 15;
+                    const displayText = isLong && !productAnalysisShowAll ? lines.slice(0, 15).join('\n') : productAnalysisSavedText;
                     return (
                       <div>
-                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                          <div className="prose prose-sm max-w-none text-gray-700">
-                            <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                        <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6">
+                          <div className="flex items-center mb-3">
+                            <svg className="h-5 w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <h5 className="text-md font-semibold text-emerald-800">상품별 분석 결과</h5>
+                          </div>
+                          <div className="prose max-w-none">
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkBreaks]}
+                              className="text-gray-700 leading-relaxed"
+                            >
                               {displayText}
                             </ReactMarkdown>
                           </div>
@@ -1814,7 +1851,7 @@ const StoreStatusAnalysisPage = () => {
                         {isLong && (
                           <button
                             onClick={() => setProductAnalysisShowAll(prev => !prev)}
-                            className="mt-3 px-4 py-2 bg-emerald-500 text-white rounded-md text-sm hover:bg-emerald-600 transition-colors"
+                            className="mt-3 mx-auto block px-4 py-2 bg-emerald-500 text-white rounded-md text-sm hover:bg-emerald-600 transition-colors"
                           >
                             {productAnalysisShowAll ? '접기' : '전체 분석 결과 보기'}
                           </button>
@@ -1828,30 +1865,47 @@ const StoreStatusAnalysisPage = () => {
               {/* 새로운 분석 결과 표시 */}
               {productAiAnalysisResult && !productAnalysisSavedText && !productAnalysisEditMode && (
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h5 className="text-md font-medium text-gray-700">분석 결과</h5>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleProductAnalysisSave}
-                        className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 transition-colors"
-                      >
-                        저장
-                      </button>
-                      <button
-                        onClick={() => setProductAnalysisEditMode(true)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
-                      >
-                        편집
-                      </button>
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6 mb-4">
+                    <div className="flex items-center mb-3">
+                      <svg className="h-5 w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <h5 className="text-md font-semibold text-emerald-800">상품별 분석 결과</h5>
                     </div>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <div className="prose prose-sm max-w-none text-gray-700">
-                      <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                    <div className="prose max-w-none">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkBreaks]}
+                        className="text-gray-700 leading-relaxed"
+                      >
                         {productAiAnalysisResult}
                       </ReactMarkdown>
                     </div>
                   </div>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => setProductAnalysisEditMode(true)}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    >
+                      편집
+                    </button>
+                    <button
+                      onClick={handleProductAnalysisSave}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 기본 안내 메시지 */}
+              {productData.length > 0 && !productAiAnalysisResult && !productAiAnalysisLoading && !productAiAnalysisError && !productAnalysisSavedText && !productAnalysisEditMode && (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <p>분석을 시작하려면 위의 "상품 데이터 분석" 버튼을 클릭하세요.</p>
+                  <p className="text-sm mt-2">매출 상위 제품, 판매량 상위 제품, 가격대별 성과를 종합적으로 분석하여 상품 전략 인사이트를 제공합니다.</p>
                 </div>
               )}
 
@@ -1880,9 +1934,10 @@ const StoreStatusAnalysisPage = () => {
                 barName="평균 매출"
                 layout="horizontal"
                 references={[
-                  { value: monthlyAverageSales, label: `평균일 매출 ${Math.round(monthlyAverageSales).toLocaleString()}원`, stroke: 'rgb(48, 127, 226)', strokeDasharray: '4 4' }, // CWDF BLUE
-                  { value: monthlyMedianSales, label: `중앙값 ${Math.round(monthlyMedianSales).toLocaleString()}원`, stroke: 'rgb(20, 160, 166)', strokeDasharray: '4 4' } // CWDF EMERALD
+                  { value: monthlyAverageSales, label: `매출 평균 ${Math.round(monthlyAverageSales || 0).toLocaleString()}원`, stroke: 'rgb(48, 127, 226)', strokeDasharray: '4 4' }, // CWDF BLUE
+                  { value: monthlyMedianSales, label: `매출 중앙값 ${Math.round(monthlyMedianSales || 0).toLocaleString()}원`, stroke: 'rgb(20, 160, 166)', strokeDasharray: '4 4' } // CWDF EMERALD
                 ]}
+                removeReferenceLabelBackground={true}
               />
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
@@ -1895,9 +1950,10 @@ const StoreStatusAnalysisPage = () => {
                 formatter={value => value?.toLocaleString() || '0'}
                 layout="horizontal"
                 references={[
-                  { value: monthlyAverageTransactions, label: `평균일 주문 ${Math.round(monthlyAverageTransactions).toLocaleString()}건`, stroke: 'rgb(255, 198, 88)', strokeDasharray: '4 4' }, // CWDF YELLOW
-                  { value: monthlyMedianTransactions, label: `중앙값 ${Math.round(monthlyMedianTransactions).toLocaleString()}건`, stroke: 'rgb(20, 160, 166)', strokeDasharray: '4 4' } // CWDF EMERALD
+                  { value: monthlyAverageTransactions, label: `주문 평균값 ${Math.round(monthlyAverageTransactions).toLocaleString()}건`, stroke: 'rgb(255, 198, 88)', strokeDasharray: '4 4' }, // CWDF YELLOW
+                  { value: monthlyMedianTransactions, label: `주문 중앙값 ${Math.round(monthlyMedianTransactions).toLocaleString()}건`, stroke: 'rgb(20, 160, 166)', strokeDasharray: '4 4' } // CWDF EMERALD
                 ]}
+                removeReferenceLabelBackground={true}
               />
             </div>
           </div>
@@ -1912,6 +1968,7 @@ const StoreStatusAnalysisPage = () => {
                 formatter={value => `${value.toFixed(0)}원`}
                 layout="horizontal"
                 reference={{ value: avgTransactionValue, label: `월평균 ${Math.round(avgTransactionValue).toLocaleString()}원`, stroke: 'rgb(20, 160, 166)', strokeDasharray: '4 4' }}
+                removeReferenceLabelBackground={true}
               />
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
@@ -1924,6 +1981,7 @@ const StoreStatusAnalysisPage = () => {
                 formatter={value => `${value.toFixed(0)}원`}
                 layout="horizontal"
                 reference={{ value: medianTransactionValue, label: `월중앙값 ${Math.round(medianTransactionValue).toLocaleString()}원`, stroke: 'rgb(48, 127, 226)', strokeDasharray: '4 4' }}
+                removeReferenceLabelBackground={true}
               />
             </div>
           </div>
@@ -1956,7 +2014,7 @@ const StoreStatusAnalysisPage = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <h4 className="text-md font-medium mb-2">평균 매출</h4>
               <BarChart
-                data={averageSalesData}
+                data={averageSalesData.map((d, idx) => ({ ...d, fill: `rgba(48, 127, 226, ${1 - (idx / (averageSalesData.length - 1)) * 0.5})` }))}
                 xDataKey="segment"
                 barDataKey="평균매출"
                 formatter={value => `${value.toLocaleString()}원`}
@@ -1967,7 +2025,7 @@ const StoreStatusAnalysisPage = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <h4 className="text-md font-medium mb-2">평균 주문건수</h4>
               <BarChart
-                data={averageOrdersData}
+                data={averageOrdersData.map((d, idx) => ({ ...d, fill: `rgba(255, 198, 88, ${1 - (idx / (averageOrdersData.length - 1)) * 0.5})` }))}
                 xDataKey="segment"
                 barDataKey="평균주문건수"
                 formatter={value => `${value.toLocaleString()}건`}
@@ -1980,7 +2038,7 @@ const StoreStatusAnalysisPage = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <h4 className="text-md font-medium mb-2">객단가 평균값</h4>
               <BarChart
-                data={avgTransactionData}
+                data={avgTransactionData.map((d, idx) => ({ ...d, fill: `rgba(20, 160, 166, ${1 - (idx / (avgTransactionData.length - 1)) * 0.5})` }))}
                 xDataKey="segment"
                 barDataKey="평균객단가"
                 formatter={value => `${value.toLocaleString()}원`}
@@ -1991,7 +2049,7 @@ const StoreStatusAnalysisPage = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <h4 className="text-md font-medium mb-2">객단가 중앙값</h4>
               <BarChart
-                data={medianTransactionData}
+                data={medianTransactionData.map((d, idx) => ({ ...d, fill: `rgba(255, 120, 101, ${1 - (idx / (medianTransactionData.length - 1)) * 0.5})` }))}
                 xDataKey="segment"
                 barDataKey="중앙객단가"
                 formatter={value => `${value.toLocaleString()}원`}
@@ -2038,7 +2096,7 @@ const StoreStatusAnalysisPage = () => {
                     : 'bg-purple-600 text-white hover:bg-purple-700 transition-colors'
                 }`}
               >
-                {timeAiAnalysisLoading ? '분석 중...' : '시간대별 종합 분석'}
+                {timeAiAnalysisLoading ? '분석 중...' : '요일/시간대 데이터 분석'}
               </button>
             )}
           </div>
@@ -2122,7 +2180,7 @@ const StoreStatusAnalysisPage = () => {
                     onClick={() => setTimeAnalysisSavedText('')}
                     className="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600 transition-colors"
                   >
-                    다시 분석
+                    새 분석
                   </button>
                 </div>
               </div>
@@ -2143,7 +2201,7 @@ const StoreStatusAnalysisPage = () => {
                     {isLong && (
                       <button
                         onClick={() => setTimeAnalysisShowAll(prev => !prev)}
-                        className="mt-3 px-4 py-2 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600 transition-colors"
+                        className="mt-3 mx-auto block px-4 py-2 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600 transition-colors"
                       >
                         {timeAnalysisShowAll ? '접기' : '전체 분석 결과 보기'}
                       </button>
@@ -2214,7 +2272,7 @@ const StoreStatusAnalysisPage = () => {
       <LoadingPopup 
         isVisible={showLoadingPopup}
         message="데이터를 가져오고 있습니다"
-        duration={2000}
+        duration={3000}
         onComplete={() => setShowLoadingPopup(false)}
       />
     </>

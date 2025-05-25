@@ -31,6 +31,7 @@ const BarChart = ({
   tickFormatter,
   height = 300,
   yAxisWidth = 180,
+  removeReferenceLabelBackground = false,
 }) => {
   const [visibleBars, setVisibleBars] = useState({
     [barDataKey]: true,
@@ -178,7 +179,42 @@ const BarChart = ({
                 y={ref.value}
                 stroke={ref.stroke || '#000'}
                 strokeDasharray={ref.strokeDasharray || '3 3'}
-                label={ref.label ? { position: 'right', value: ref.label, fill: ref.stroke, fontSize: 12 } : undefined}
+                label={ref.label ? (props => {
+                  const { viewBox } = props;
+                  const x = (viewBox && viewBox.x) || 0;
+                  const y = (viewBox && viewBox.y) || 0;
+                  const width = 160;
+                  const height = 20;
+                  let labelY;
+                  if (ref.labelPosition === 'bottom') {
+                    labelY = y + 2;
+                  } else if (ref.labelPosition === 'top') {
+                    labelY = y - height - 2;
+                  } else if (removeReferenceLabelBackground && allRefs.length > 1) {
+                    // 배경 제거 모드에서 여러 기준선이 있을 때 겹침 방지
+                    labelY = idx % 2 === 0 ? y - height - 5 : y + 5;
+                  } else {
+                    labelY = y - height / 2;
+                  }
+                  const centerX = (viewBox && viewBox.width) ? (x + viewBox.width / 2 - width / 2) : (x - width / 2);
+                  return (
+                    <foreignObject x={centerX} y={labelY} width={width} height={height} style={{ pointerEvents: 'none' }}>
+                      <div style={{
+                        background: removeReferenceLabelBackground ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.65)',
+                        color: ref.stroke || '#000',
+                        padding: '1px 3px',
+                        borderRadius: '8px',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        border: 'none',
+                        display: 'inline-block',
+                        textAlign: 'center',
+                      }}>
+                        {ref.label}
+                      </div>
+                    </foreignObject>
+                  );
+                }) : undefined}
               />
             ) : (
               <ReferenceLine
@@ -186,7 +222,37 @@ const BarChart = ({
                 x={ref.value}
                 stroke={ref.stroke || '#000'}
                 strokeDasharray={ref.strokeDasharray || '3 3'}
-                label={ref.label ? { position: 'top', value: ref.label, fill: ref.stroke, fontSize: 12 } : undefined}
+                label={ref.label ? (props => {
+                  const { viewBox } = props;
+                  const x = (viewBox && viewBox.x) || 0;
+                  const y = (viewBox && viewBox.y) || 0;
+                  const width = 160;
+                  const height = 20;
+                  let labelX;
+                  if (ref.labelPosition === 'right') {
+                    labelX = x + 2;
+                  } else {
+                    labelX = x - width / 2;
+                  }
+                  const centerY = (viewBox && viewBox.height) ? (y + viewBox.height / 2 - height / 2) : (y - height / 2);
+                  return (
+                    <foreignObject x={labelX} y={centerY} width={width} height={height} style={{ pointerEvents: 'none' }}>
+                      <div style={{
+                        background: removeReferenceLabelBackground ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.65)',
+                        color: ref.stroke || '#000',
+                        padding: '1px 3px',
+                        borderRadius: '8px',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        border: 'none',
+                        display: 'inline-block',
+                        textAlign: 'center',
+                      }}>
+                        {ref.label}
+                      </div>
+                    </foreignObject>
+                  );
+                }) : undefined}
               />
             )
           ))}

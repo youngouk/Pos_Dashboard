@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../../contexts/DashboardContext';
 import StoreSelector from '../common/StoreSelector';
 import { FiSearch, FiBell, FiCalendar, FiChevronDown } from 'react-icons/fi';
@@ -6,9 +7,14 @@ import { FiSearch, FiBell, FiCalendar, FiChevronDown } from 'react-icons/fi';
 const Header = () => {
   const { userView, changeUserView, filters, updateFilters, stores } = useDashboard();
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const navigate = useNavigate();
 
   const handleViewChange = (view) => {
     changeUserView(view);
+    // 슈퍼바이저 선택 시 슈퍼바이저 페이지로 이동
+    if (view === 'supervisor') {
+      navigate('/supervisor');
+    }
   };
 
   const handleDateRangeChange = (dateRange) => {
@@ -68,8 +74,8 @@ const Header = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-panze-dark">ABC bakery 대시보드</h1>
-          <p className="text-gray-500 text-sm mt-1">주요한 KPI를 한눈에 확인하세요</p>
+          <h1 className="text-2xl font-bold text-panze-dark">POS Business Intelligence</h1>
+          <p className="text-gray-500 text-sm mt-1">매출부터 고객 분석까지, 모든 KPI를 한눈에</p>
         </div>
         
         <div className="flex items-center space-x-4">
