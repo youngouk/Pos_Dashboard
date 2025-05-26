@@ -78,6 +78,15 @@ const StoreStatusAnalysisPage = () => {
   const [summaryAiAnalysisError, setSummaryAiAnalysisError] = useState('');
   const [summaryEditMode, setSummaryEditMode] = useState(false);
 
+  // 내 매장 상세 리포트 AI 분석 상태 추가
+  const [detailReportAiAnalysisLoading, setDetailReportAiAnalysisLoading] = useState(false);
+  const [detailReportAiAnalysisResult, setDetailReportAiAnalysisResult] = useState('');
+  const [detailReportAiAnalysisError, setDetailReportAiAnalysisError] = useState('');
+  const [detailReportEditMode, setDetailReportEditMode] = useState(false);
+  const [detailReportMarkdownText, setDetailReportMarkdownText] = useState('');
+  const [detailReportSavedText, setDetailReportSavedText] = useState('');
+  const [detailReportShowAll, setDetailReportShowAll] = useState(false);
+
   // 로딩 팝업 상태 추가
   const [showLoadingPopup, setShowLoadingPopup] = useState(true);
 
@@ -231,6 +240,20 @@ const StoreStatusAnalysisPage = () => {
       .catch(() => {
         setTimeAnalysisSavedText('');
         setTimeAnalysisMarkdownText('');
+      });
+  }, []);
+
+  // Load saved detail report summary on mount
+  useEffect(() => {
+    fetch(`${API_URL}/api/summary/detail_report_summary`)
+      .then(res => { if (!res.ok) throw new Error('Not found'); return res.text(); })
+      .then(text => {
+        setDetailReportSavedText(text);
+        setDetailReportMarkdownText(text);
+      })
+      .catch(() => {
+        setDetailReportSavedText('');
+        setDetailReportMarkdownText('');
       });
   }, []);
 
@@ -1203,6 +1226,157 @@ const StoreStatusAnalysisPage = () => {
   // 편집 시작 함수
   const handleSummaryEdit = () => {
     setSummaryEditMode(true);
+  };
+
+  // 내 매장 상세 리포트 분석 요청 함수
+  const handleDetailReportAnalysis = useCallback(async () => {
+    if (!dailyData.length) {
+      setDetailReportAiAnalysisError('분석할 데이터가 없습니다.');
+      return;
+    }
+
+    setDetailReportAiAnalysisLoading(true);
+    setDetailReportAiAnalysisError('');
+    setDetailReportAiAnalysisResult('');
+
+    try {
+      // 페이지 전체 데이터 준비
+      const pageData = {
+        // KPI 지표
+        kpiMetrics: {
+          totalMonthlySales: totalMonthlySales,
+          totalMonthlyTransactions: totalMonthlyTransactions,
+          avgTransactionValue: avgTransactionValue,
+          medianTransactionValue: medianTransactionValue
+        },
+        
+        // 일별 데이터
+        dailySalesData: dailyData.map(item => ({
+          date: item.date,
+          totalSales: item.total_sales,
+          transactionCount: item.transaction_count,
+          avgTransactionValue: item.avg_transaction_value
+        })),
+        
+        // 요일별 지표
+        dayOfWeekMetrics: dayOfWeekData,
+        
+        // 상품별 데이터
+        productMetrics: {
+          topSellingProducts: topSellingProducts.slice(0, 10),
+          topCountProducts: topCountProducts.slice(0, 10),
+          totalProducts: productData.length,
+          totalProductSales: productData.reduce((sum, item) => sum + item.total_sales, 0),
+          totalQuantitySold: productData.reduce((sum, item) => sum + item.quantity, 0)
+        },
+        
+        // 시간대별 데이터
+        timeSegmentMetrics: {
+          segmentData: segmentData,
+          hourlyData: hourlyData.slice(0, 24), // 24시간 데이터
+          topProductsByTimeSegment: segmentTopProducts
+        },
+        
+        // 기간 정보
+        period: {
+          startDate: filters.dateRange.startDate,
+          endDate: filters.dateRange.endDate,
+          storeName: filters.selectedStore || '전체 매장'
+        }
+      };
+
+      // 페이지 전체 분석 API 호출
+      const response = await fetch(`${API_URL}/api/ai/analyze-page`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          page_data: pageData,
+          context: {
+            pageTitle: '내 매장 상세 리포트',
+            analysisType: 'detailed_store_report',
+            userPrompt: `다음 매장 상세 데이터를 기반으로 심층적인 매장 리포트를 작성해주세요:
+
+**분석 기간**: ${filters.dateRange.startDate} ~ ${filters.dateRange.endDate}
+**대상 매장**: ${filters.selectedStore || '전체 매장'}
+
+제공된 데이터:
+1. 월간 총 매출/결제수/객단가 지표
+2. 일자별 매출 추이 및 변동성
+3. 요일별 매출/주문/객단가 패턴
+4. 상품별 매출 순위 및 판매량 분석
+5. 시간대별 매출 패턴 및 인기 제품
+
+다음 관점에서 상세하고 실무적인 분석을 제공해주세요:
+
+**1. 매장 운영 현황 진단**
+- 현재 매장의 강점과 약점 분석
+- 매출 구조의 안정성 평가
+- 고객 구매 패턴 심층 분석
+
+**2. 상품 전략 세부 분석**
+- 핵심 수익 상품 식별 및 관리 방안
+- 상품 포트폴리오 최적화 제안
+- 계절성 및 트렌드 반영 상품 전략
+
+**3. 운영 효율성 극대화**
+- 시간대별 최적 인력 배치 계획
+- 재고 관리 및 발주 최적화
+- 매장 운영 시간 조정 제안
+
+**4. 고객 서비스 개선**
+- 피크타임 대응 전략
+- 고객 만족도 향상 방안
+- 단골 고객 유지 전략
+
+**5. 수익성 개선 로드맵**
+- 단기 실행 과제 (1개월 내)
+- 중기 개선 계획 (3개월 내)
+- 장기 성장 전략 (6개월 이상)
+
+매장 운영자가 즉시 실행할 수 있는 구체적이고 실용적인 가이드를 2500자 내외로 제공해주세요.`
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`분석 요청 실패: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const analysisResult = result.analysis || '분석 결과를 받을 수 없습니다.';
+      setDetailReportAiAnalysisResult(analysisResult);
+      setDetailReportMarkdownText(analysisResult); // 분석 결과를 편집 가능한 텍스트로도 설정
+
+    } catch (error) {
+      console.error('상세 리포트 분석 오류:', error);
+      setDetailReportAiAnalysisError(`분석 중 오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setDetailReportAiAnalysisLoading(false);
+    }
+  }, [dailyData, totalMonthlySales, totalMonthlyTransactions, avgTransactionValue, medianTransactionValue, 
+      dayOfWeekData, topSellingProducts, topCountProducts, productData, segmentData, hourlyData, 
+      segmentTopProducts, filters]);
+
+  // Save detail report summary
+  const handleDetailReportSave = () => {
+    fetch(`${API_URL}/api/summary/detail_report_summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: detailReportMarkdownText }),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Save failed');
+        setDetailReportSavedText(detailReportMarkdownText);
+        setDetailReportEditMode(false); // 편집 모드 해제
+      })
+      .catch(err => setError(err.toString()));
+  };
+
+  // Edit detail report summary
+  const handleDetailReportEdit = () => {
+    setDetailReportEditMode(true);
   };
 
   return (
@@ -2265,6 +2439,195 @@ const StoreStatusAnalysisPage = () => {
         </div>
 
         <ReviewAnalysisSection onExportPdf={handleExportPdf} />
+
+        {/* 내 매장 상세 리포트 - 페이지 최하단 */}
+        <div className="bg-white p-6 rounded-lg shadow mb-6 mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">📋 내 매장 상세 리포트</h2>
+            {!detailReportSavedText && !detailReportEditMode && (
+              <button
+                onClick={handleDetailReportAnalysis}
+                disabled={detailReportAiAnalysisLoading || !dailyData.length}
+                className={`px-4 py-2 rounded-md font-medium ${
+                  detailReportAiAnalysisLoading || !dailyData.length
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-teal-600 text-white hover:bg-teal-700 transition-colors'
+                }`}
+              >
+                {detailReportAiAnalysisLoading ? '분석 중...' : '상세 리포트 생성'}
+              </button>
+            )}
+            {(detailReportSavedText || detailReportEditMode) && (
+              <div className="flex space-x-2">
+                {!detailReportEditMode && (
+                  <>
+                    <button
+                      onClick={handleDetailReportEdit}
+                      className="px-3 py-1 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    >
+                      편집
+                    </button>
+                    <button
+                      onClick={() => setDetailReportSavedText('')}
+                      className="px-3 py-1 text-sm bg-gray-400 text-white rounded-md hover:bg-gray-500 transition-colors"
+                    >
+                      새 리포트
+                    </button>
+                  </>
+                )}
+                {detailReportEditMode && (
+                  <>
+                    <button
+                      onClick={handleDetailReportSave}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      저장
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDetailReportEditMode(false);
+                        setDetailReportMarkdownText(detailReportSavedText);
+                      }}
+                      className="px-3 py-1 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    >
+                      취소
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="text-sm text-gray-600 mb-4">
+            <p>매장의 모든 운영 데이터를 종합하여 실무진이 바로 활용할 수 있는 상세한 매장 운영 가이드를 제공합니다.</p>
+          </div>
+
+          {/* 분석 로딩 상태 */}
+          {detailReportAiAnalysisLoading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              <span className="ml-3 text-gray-600">상세 리포트를 생성하고 있습니다...</span>
+            </div>
+          )}
+
+          {/* 분석 오류 메시지 */}
+          {detailReportAiAnalysisError && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">분석 오류</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{detailReportAiAnalysisError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 편집 모드 */}
+          {detailReportEditMode && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">상세 리포트 내용 편집</label>
+              <textarea
+                className="w-full border border-gray-300 rounded-md p-3 min-h-[400px] text-sm"
+                value={detailReportMarkdownText}
+                onChange={(e) => setDetailReportMarkdownText(e.target.value)}
+                placeholder="상세 리포트 내용을 입력하거나 수정하세요..."
+              />
+            </div>
+          )}
+
+          {/* 저장된 분석 결과 표시 */}
+          {detailReportSavedText && !detailReportEditMode && (
+            <div>
+              {(() => {
+                const lines = detailReportSavedText.split('\n');
+                const isLong = lines.length > 20;
+                const displayText = isLong && !detailReportShowAll ? lines.slice(0, 20).join('\n') : detailReportSavedText;
+                return (
+                  <div>
+                    <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-6">
+                      <div className="flex items-center mb-3">
+                        <svg className="h-5 w-5 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h5 className="text-md font-semibold text-teal-800">상세 리포트</h5>
+                      </div>
+                      <div className="prose max-w-none">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkBreaks]}
+                          className="text-gray-700 leading-relaxed"
+                        >
+                          {displayText}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                    {isLong && (
+                      <button
+                        onClick={() => setDetailReportShowAll((prev) => !prev)}
+                        className="mt-4 mx-auto block px-6 py-2 bg-teal-500 text-white font-bold rounded-md shadow-lg transition-colors duration-200 hover:bg-teal-600"
+                      >
+                        {detailReportShowAll ? '접기' : '상세 리포트 전체보기'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* 새로운 분석 결과 (아직 저장되지 않음) */}
+          {detailReportAiAnalysisResult && !detailReportAiAnalysisLoading && !detailReportSavedText && !detailReportEditMode && (
+            <div>
+              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-6 mb-4">
+                <div className="flex items-center mb-3">
+                  <svg className="h-5 w-5 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h5 className="text-md font-semibold text-teal-800">상세 리포트</h5>
+                </div>
+                <div className="prose max-w-none">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkBreaks]}
+                    className="text-gray-700 leading-relaxed"
+                  >
+                    {detailReportAiAnalysisResult}
+                  </ReactMarkdown>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setDetailReportEditMode(true)}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  편집
+                </button>
+                <button
+                  onClick={handleDetailReportSave}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 초기 상태 안내 메시지 */}
+          {!detailReportAiAnalysisResult && !detailReportAiAnalysisLoading && !detailReportAiAnalysisError && !detailReportSavedText && !detailReportEditMode && (
+            <div className="text-center py-8 text-gray-500">
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p>상세 리포트를 생성하려면 위의 "상세 리포트 생성" 버튼을 클릭하세요.</p>
+              <p className="text-sm mt-2">매장 운영에 필요한 모든 데이터를 종합하여 실무진이 바로 활용할 수 있는 상세 가이드를 제공합니다.</p>
+            </div>
+          )}
+        </div>
       </div>
       <CacheClearButton />
       
